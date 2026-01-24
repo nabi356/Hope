@@ -1,12 +1,151 @@
-const TALENTS = [
-    { id: 'guitar', name: 'Guitar', icon: '🎸' },
-    { id: 'piano', name: 'Piano', icon: '🎹' },
-    { id: 'violin', name: 'Violin', icon: '🎻' },
-    { id: 'photography', name: 'Photography', icon: '📷' },
-    { id: 'painting', name: 'Painting', icon: '🎨' },
-    { id: 'dancing', name: 'Dancing', icon: '💃' },
-    { id: 'singing', name: 'Singing', icon: '🎤' },
-    { id: 'acting', name: 'Acting', icon: '🎭' }
+const TALENT_CATEGORIES = [
+    {
+        id: 'music',
+        name: 'Music',
+        icon: '🎵',
+        subcategories: [
+            { id: 'singing', name: 'Singing', icon: '🎤' },
+            { id: 'guitar', name: 'Guitar', icon: '🎸' },
+            { id: 'piano', name: 'Piano', icon: '🎹' },
+            { id: 'drums', name: 'Drums', icon: '🥁' },
+            { id: 'violin', name: 'Violin', icon: '🎻' },
+            { id: 'djmixing', name: 'DJ/Mixing', icon: '🎧' },
+            { id: 'saxophone', name: 'Saxophone', icon: '🎷' },
+            { id: 'bass', name: 'Bass Guitar', icon: '🎸' },
+            { id: 'trumpet', name: 'Trumpet', icon: '📯' },
+            { id: 'harmonica', name: 'Harmonica', icon: '🎶' }
+        ]
+    },
+    {
+        id: 'visual-arts',
+        name: 'Visual Arts',
+        icon: '🎨',
+        subcategories: [
+            { id: 'painting', name: 'Painting', icon: '🎨' },
+            { id: 'drawing', name: 'Drawing', icon: '✏️' },
+            { id: 'photography', name: 'Photography', icon: '📷' },
+            { id: 'sculpture', name: 'Sculpture', icon: '🗿' },
+            { id: 'digital-art', name: 'Digital Art', icon: '💻' },
+            { id: 'graphic-design', name: 'Graphic Design', icon: '🎭' },
+            { id: 'illustration', name: 'Illustration', icon: '🖼️' },
+            { id: 'animation', name: 'Animation', icon: '🎬' },
+            { id: 'video-editing', name: 'Video Editing', icon: '🎞️' },
+            { id: 'calligraphy', name: 'Calligraphy', icon: '✒️' }
+        ]
+    },
+    {
+        id: 'performance',
+        name: 'Performance',
+        icon: '🎭',
+        subcategories: [
+            { id: 'dancing', name: 'Dancing', icon: '💃' },
+            { id: 'acting', name: 'Acting', icon: '🎭' },
+            { id: 'standup', name: 'Stand-up Comedy', icon: '😂' },
+            { id: 'magic', name: 'Magic', icon: '✨' },
+            { id: 'poetry', name: 'Poetry', icon: '📝' },
+            { id: 'public-speaking', name: 'Public Speaking', icon: '🎤' },
+            { id: 'improv', name: 'Improv', icon: '🎪' },
+            { id: 'theatre', name: 'Theatre', icon: '🎬' },
+            { id: 'mime', name: 'Mime', icon: '🤐' },
+            { id: 'storytelling', name: 'Storytelling', icon: '📖' }
+        ]
+    },
+    {
+        id: 'technical',
+        name: 'Technical',
+        icon: '💻',
+        subcategories: [
+            { id: 'coding', name: 'Coding', icon: '👨‍💻' },
+            { id: 'web-design', name: 'Web Design', icon: '🌐' },
+            { id: 'app-dev', name: 'App Development', icon: '📱' },
+            { id: 'data-science', name: 'Data Science', icon: '📊' },
+            { id: 'machine-learning', name: 'Machine Learning', icon: '🤖' },
+            { id: 'cybersecurity', name: 'Cybersecurity', icon: '🔒' },
+            { id: 'database', name: 'Database Design', icon: '🗄️' },
+            { id: 'ui-ux', name: 'UI/UX Design', icon: '🎨' },
+            { id: 'cloud', name: 'Cloud Computing', icon: '☁️' },
+            { id: 'devops', name: 'DevOps', icon: '⚙️' }
+        ]
+    },
+    {
+        id: 'sports',
+        name: 'Sports',
+        icon: '⚽',
+        subcategories: [
+            { id: 'football', name: 'Football', icon: '⚽' },
+            { id: 'basketball', name: 'Basketball', icon: '🏀' },
+            { id: 'tennis', name: 'Tennis', icon: '🎾' },
+            { id: 'swimming', name: 'Swimming', icon: '🏊' },
+            { id: 'yoga', name: 'Yoga', icon: '🧘' },
+            { id: 'gym', name: 'Fitness', icon: '💪' },
+            { id: 'martial-arts', name: 'Martial Arts', icon: '🥋' },
+            { id: 'cycling', name: 'Cycling', icon: '🚴' },
+            { id: 'rock-climbing', name: 'Rock Climbing', icon: '🧗' },
+            { id: 'skateboarding', name: 'Skateboarding', icon: '🛹' }
+        ]
+    },
+    {
+        id: 'design',
+        name: 'Design & Fashion',
+        icon: '👗',
+        subcategories: [
+            { id: 'fashion-design', name: 'Fashion Design', icon: '👗' },
+            { id: 'interior-design', name: 'Interior Design', icon: '🏠' },
+            { id: 'ux-design', name: 'UX/UI Design', icon: '🎨' },
+            { id: 'product-design', name: 'Product Design', icon: '🛠️' },
+            { id: 'industrial-design', name: 'Industrial Design', icon: '⚙️' },
+            { id: 'fashion-styling', name: 'Fashion Styling', icon: '👔' },
+            { id: '3d-design', name: '3D Design', icon: '🎯' },
+            { id: 'web-design', name: 'Web Design', icon: '🌐' },
+            { id: 'packaging', name: 'Packaging Design', icon: '📦' }
+        ]
+    },
+    {
+        id: 'writing',
+        name: 'Writing',
+        icon: '✍️',
+        subcategories: [
+            { id: 'creative-writing', name: 'Creative Writing', icon: '📝' },
+            { id: 'journalism', name: 'Journalism', icon: '📰' },
+            { id: 'copywriting', name: 'Copywriting', icon: '✍️' },
+            { id: 'screenwriting', name: 'Screenwriting', icon: '🎬' },
+            { id: 'content-creation', name: 'Content Creation', icon: '📱' },
+            { id: 'blogging', name: 'Blogging', icon: '📖' },
+            { id: 'poetry', name: 'Poetry', icon: '📜' },
+            { id: 'technical-writing', name: 'Technical Writing', icon: '📚' }
+        ]
+    },
+    {
+        id: 'business',
+        name: 'Business & Marketing',
+        icon: '💼',
+        subcategories: [
+            { id: 'digital-marketing', name: 'Digital Marketing', icon: '📈' },
+            { id: 'seo', name: 'SEO', icon: '🔍' },
+            { id: 'social-media', name: 'Social Media Marketing', icon: '📱' },
+            { id: 'brand-strategy', name: 'Brand Strategy', icon: '🎯' },
+            { id: 'entrepreneurship', name: 'Entrepreneurship', icon: '🚀' },
+            { id: 'project-management', name: 'Project Management', icon: '📊' },
+            { id: 'sales', name: 'Sales', icon: '💰' },
+            { id: 'business-dev', name: 'Business Development', icon: '💼' },
+            { id: 'marketing-analytics', name: 'Marketing Analytics', icon: '📊' }
+        ]
+    },
+    {
+        id: 'language',
+        name: 'Languages',
+        icon: '🌍',
+        subcategories: [
+            { id: 'spanish', name: 'Spanish', icon: '🇪🇸' },
+            { id: 'french', name: 'French', icon: '🇫🇷' },
+            { id: 'german', name: 'German', icon: '🇩🇪' },
+            { id: 'mandarin', name: 'Mandarin', icon: '🇨🇳' },
+            { id: 'japanese', name: 'Japanese', icon: '🇯🇵' },
+            { id: 'arabic', name: 'Arabic', icon: '🇸🇦' },
+            { id: 'english', name: 'English', icon: '🇬🇧' },
+            { id: 'hindi', name: 'Hindi', icon: '🇮🇳' }
+        ]
+    }
 ];
 
 // Mock data for users, events, and challenges
@@ -158,21 +297,31 @@ async function handleLogin() {
 
 function renderTalents() {
     const container = document.getElementById('talents-container');
-    container.innerHTML = '<div class="talent-grid">' + 
-        TALENTS.map(t => `
-            <button class="talent-btn" onclick="toggleTalent('${t.id}', this)">
-                <div class="talent-icon">${t.icon}</div>
-                <div>${t.name}</div>
-            </button>
-        `).join('') + '</div>';
+    container.innerHTML = TALENT_CATEGORIES.map(category => `
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">${category.icon}</div>
+                <div class="category-name">${category.name}</div>
+            </div>
+            <div class="subcategory-grid">
+                ${category.subcategories.map(talent => `
+                    <button class="talent-btn" onclick="toggleTalent('${talent.id}', '${talent.name}', this)">
+                        <div class="talent-icon">${talent.icon}</div>
+                        <div class="talent-name">${talent.name}</div>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
 }
 
-function toggleTalent(id, btn) {
-    if (selectedTalents.includes(id)) {
-        selectedTalents = selectedTalents.filter(t => t !== id);
+function toggleTalent(id, name, btn) {
+    const talent = selectedTalents.find(t => t.id === id);
+    if (talent) {
+        selectedTalents = selectedTalents.filter(t => t.id !== id);
         btn.classList.remove('selected');
     } else {
-        selectedTalents.push(id);
+        selectedTalents.push({ id, name });
         btn.classList.add('selected');
     }
     document.getElementById('talent-count').textContent = `${selectedTalents.length} skills selected`;
@@ -188,6 +337,30 @@ function setupBioCounter() {
 }
 
 async function goToDashboard() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    
+    if (!currentUserId) return;
+
+    // Get user data
+    const users = getAllUsers();
+    const user = users.find(u => u._id === currentUserId);
+    
+    if (user) {
+        // Update user with bio and age from form
+        const age = document.getElementById('user-age').value;
+        const bio = document.getElementById('user-bio').value;
+        const talentIndex = users.findIndex(u => u._id === currentUserId);
+        
+        users[talentIndex].age = age ? parseInt(age) : null;
+        users[talentIndex].bio = bio;
+        users[talentIndex].talents = selectedTalents;
+        users[talentIndex].collaborators = users[talentIndex].collaborators || [];
+        users[talentIndex].projects = users[talentIndex].projects || [];
+        users[talentIndex].rating = users[talentIndex].rating || 0;
+        
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+    
     showPage('dashboard-page');
     loadDashboard();
 }
@@ -196,6 +369,9 @@ async function loadDashboard() {
     const currentUserId = localStorage.getItem('currentUserId');
     
     if (!currentUserId) return;
+
+    // Update profile display
+    updateProfileDisplay();
 
     // Get mock users
     const mockUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
@@ -240,6 +416,173 @@ function logout() {
     showPage('login-page');
 }
 
+// Profile & Modal Functions
+function updateProfileDisplay() {
+    if (!currentUser) return;
+    
+    const users = getAllUsers();
+    const user = users.find(u => u._id === currentUser.id);
+    
+    if (user) {
+        document.getElementById('profile-name').textContent = user.name;
+        document.getElementById('profile-email').textContent = user.email;
+        
+        // Update stats
+        document.getElementById('stats-talents').textContent = user.talents ? user.talents.length : 0;
+        document.getElementById('stats-collaborators').textContent = user.collaborators ? user.collaborators.length : 0;
+        document.getElementById('stats-projects').textContent = user.projects ? user.projects.length : 0;
+        document.getElementById('stats-rating').textContent = user.rating ? user.rating.toFixed(1) : '0.0';
+        
+        // Update profile completion
+        const completion = calculateProfileCompletion(user);
+        document.getElementById('completion-percentage').textContent = `${completion}% Complete`;
+        document.getElementById('completion-bar').style.width = `${completion}%`;
+        
+        // Display talents
+        const talentsDisplay = document.getElementById('user-talents-display');
+        if (user.talents && user.talents.length > 0) {
+            talentsDisplay.innerHTML = user.talents.map(t => `<div class="talent-tag">${getTalentIcon(t.id)} ${t.name}</div>`).join('');
+        } else {
+            talentsDisplay.innerHTML = '<p style="color: #6b7280;">No talents added yet</p>';
+        }
+    }
+}
+
+function calculateProfileCompletion(user) {
+    let completion = 0;
+    if (user.name) completion += 20;
+    if (user.email) completion += 20;
+    if (user.bio && user.bio.length > 10) completion += 20;
+    if (user.talents && user.talents.length > 0) completion += 20;
+    if (user.age) completion += 20;
+    return Math.min(completion, 100);
+}
+
+function getTalentIcon(talentId) {
+    for (let category of TALENT_CATEGORIES) {
+        const talent = category.subcategories.find(t => t.id === talentId);
+        if (talent) return talent.icon;
+    }
+    return '🎯';
+}
+
+function showEditModal() {
+    if (!currentUser) return;
+    
+    const users = getAllUsers();
+    const user = users.find(u => u._id === currentUser.id);
+    
+    if (user) {
+        document.getElementById('edit-name').value = user.name || '';
+        document.getElementById('edit-age').value = user.age || '';
+        document.getElementById('edit-bio').value = user.bio || '';
+        
+        const charCount = document.getElementById('edit-char-count');
+        charCount.textContent = `${(user.bio || '').length}/300 characters`;
+        
+        document.getElementById('edit-bio').oninput = () => {
+            charCount.textContent = `${document.getElementById('edit-bio').value.length}/300 characters`;
+        };
+    }
+    
+    document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.add('hidden');
+}
+
+function showTalentsModal() {
+    renderModalTalents();
+    document.getElementById('talents-modal').classList.remove('hidden');
+}
+
+function closeTalentsModal() {
+    document.getElementById('talents-modal').classList.add('hidden');
+}
+
+function renderModalTalents() {
+    const users = getAllUsers();
+    const user = users.find(u => u._id === currentUser.id);
+    const currentTalents = user ? user.talents || [] : [];
+    
+    // Reset selectedTalents for modal
+    selectedTalents = [...currentTalents];
+    
+    const container = document.getElementById('modal-talents-container');
+    container.innerHTML = TALENT_CATEGORIES.map(category => `
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">${category.icon}</div>
+                <div class="category-name">${category.name}</div>
+            </div>
+            <div class="subcategory-grid">
+                ${category.subcategories.map(talent => `
+                    <button class="talent-btn ${currentTalents.find(t => t.id === talent.id) ? 'selected' : ''}" 
+                            onclick="toggleModalTalent('${talent.id}', '${talent.name}', this)">
+                        <div class="talent-icon">${talent.icon}</div>
+                        <div class="talent-name">${talent.name}</div>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('modal-talent-count').textContent = `${selectedTalents.length} skills selected`;
+}
+
+function toggleModalTalent(id, name, btn) {
+    const talent = selectedTalents.find(t => t.id === id);
+    if (talent) {
+        selectedTalents = selectedTalents.filter(t => t.id !== id);
+        btn.classList.remove('selected');
+    } else {
+        selectedTalents.push({ id, name });
+        btn.classList.add('selected');
+    }
+    document.getElementById('modal-talent-count').textContent = `${selectedTalents.length} skills selected`;
+}
+
+function saveModalTalents() {
+    const users = getAllUsers();
+    const userIndex = users.findIndex(u => u._id === currentUser.id);
+    
+    if (userIndex !== -1) {
+        users[userIndex].talents = selectedTalents;
+        localStorage.setItem('users', JSON.stringify(users));
+        currentUser.talents = selectedTalents;
+        
+        closeTalentsModal();
+        updateProfileDisplay();
+    }
+}
+
+function saveProfileChanges() {
+    const name = document.getElementById('edit-name').value;
+    const age = document.getElementById('edit-age').value;
+    const bio = document.getElementById('edit-bio').value;
+    
+    if (!name) {
+        alert('Please enter your name');
+        return;
+    }
+    
+    const users = getAllUsers();
+    const userIndex = users.findIndex(u => u._id === currentUser.id);
+    
+    if (userIndex !== -1) {
+        users[userIndex].name = name;
+        users[userIndex].age = age ? parseInt(age) : null;
+        users[userIndex].bio = bio;
+        
+        localStorage.setItem('users', JSON.stringify(users));
+        currentUser.name = name;
+        
+        closeEditModal();
+        updateProfileDisplay();
+    }
+}
+
 // Check auth on load
 window.onload = () => {
     // Initialize storage on page load
@@ -262,3 +605,58 @@ window.onload = () => {
         }
     }
 };
+
+/* Profile Modal Functions */
+function showProfileModal() {
+    if (!currentUser) return;
+    
+    const users = getAllUsers();
+    const user = users.find(u => u._id === currentUser.id);
+    
+    if (user) {
+        // Update modal header
+        document.getElementById('modal-profile-name').textContent = user.name;
+        document.getElementById('modal-profile-email').textContent = user.email;
+        
+        // Update stats
+        document.getElementById('modal-talents-count').textContent = user.talents ? user.talents.length : 0;
+        document.getElementById('modal-collaborators-count').textContent = user.collaborators ? user.collaborators.length : 0;
+        document.getElementById('modal-projects-count').textContent = user.projects ? user.projects.length : 0;
+        document.getElementById('modal-rating-count').textContent = user.rating ? user.rating.toFixed(1) : '0.0';
+        
+        // Update completion
+        const completion = calculateProfileCompletion(user);
+        document.getElementById('modal-completion-text').textContent = `${completion}%`;
+        document.getElementById('modal-completion-bar').style.width = `${completion}%`;
+        
+        // Update talents
+        const talentsList = document.getElementById('modal-talents-list');
+        if (user.talents && user.talents.length > 0) {
+            talentsList.innerHTML = user.talents.map(t => `<div class="talent-badge">${getTalentIcon(t.id)} ${t.name}</div>`).join('');
+        } else {
+            talentsList.innerHTML = '<span style="color: #6b7280; font-size: 0.875rem;">No talents added yet</span>';
+        }
+        
+        // Show modal
+        document.getElementById('profile-modal-overlay').classList.remove('hidden');
+    }
+}
+
+function closeProfileModal() {
+    document.getElementById('profile-modal-overlay').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const overlay = document.getElementById('profile-modal-overlay');
+    if (overlay && event.target === overlay) {
+        closeProfileModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeProfileModal();
+    }
+});

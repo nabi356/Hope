@@ -93,7 +93,9 @@
             <h1>What are your talents?</h1>
             <p class="subtitle">Select all skills that describe you</p>
             <p id="talent-count" style="color: #a855f7; margin-bottom: 1rem;">0 skills selected</p>
+            
             <div id="talents-container"></div>
+            
             <button class="btn-primary" onclick="showPage('bio-page')" id="continue-btn" disabled>Continue</button>
         </div>
     </div>
@@ -123,9 +125,17 @@
     <div id="dashboard-page" class="page">
         <div class="header-gradient">
             <div class="header-content">
-                <div>
-                    <h1 class="header-title">⚡ HOPE</h1>
-                    <p>Where Talent Meets Opportunity</p>
+                <div class="header-left">
+                    <div class="header-profile-avatar" onclick="showProfileModal()">
+                        <div class="avatar-wrapper">
+                            <span id="header-avatar-text">👤</span>
+                        </div>
+                        <div class="avatar-pulse"></div>
+                    </div>
+                    <div>
+                        <h1 class="header-title">⚡ HOPE</h1>
+                        <p>Where Talent Meets Opportunity</p>
+                    </div>
                 </div>
                 <div>
                     <button class="icon-btn">🔔</button>
@@ -134,12 +144,185 @@
             </div>
         </div>
         <div class="container">
-            <h2>Talents Near You</h2>
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-info">
+                            <h2 id="profile-name">User Name</h2>
+                            <p id="profile-email" style="color: #9ca3af;">user@email.com</p>
+                            <button class="btn-secondary" onclick="showEditModal()">✎ Edit Profile</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="progress-section">
+                    <h3>Profile Completion</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar-horizontal">
+                            <div class="progress-fill-horizontal" id="completion-bar" style="width: 0%"></div>
+                        </div>
+                        <p id="completion-percentage" style="text-align: center; color: #a855f7; margin-top: 0.5rem;">0% Complete</p>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div>
+                            <p class="stat-label">Talents</p>
+                            <p class="stat-value" id="stats-talents">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div>
+                            <p class="stat-label">Collaborators</p>
+                            <p class="stat-value" id="stats-collaborators">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div>
+                            <p class="stat-label">Projects</p>
+                            <p class="stat-value" id="stats-projects">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div>
+                            <p class="stat-label">Rating</p>
+                            <p class="stat-value" id="stats-rating">0.0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Talents Display -->
+                <div class="talents-display">
+                    <h3>Your Talents</h3>
+                    <div id="user-talents-display" class="talents-list"></div>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 2rem;">Talents Near You</h2>
             <div class="user-grid" id="users-list"></div>
             <h2>Upcoming Events</h2>
             <div class="event-grid" id="events-list"></div>
             <h2>Active Challenges</h2>
             <div class="challenge-grid" id="challenges-list"></div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal-overlay" class="profile-modal-overlay hidden" onclick="closeProfileModal()">
+        <div class="profile-modal" onclick="event.stopPropagation()">
+            <div class="profile-modal-header">
+                <div class="profile-modal-avatar">👤</div>
+                <div class="profile-modal-info">
+                    <p class="profile-modal-name" id="modal-profile-name">User Name</p>
+                    <p class="profile-modal-email" id="modal-profile-email">user@email.com</p>
+                </div>
+                <button class="profile-modal-close" onclick="closeProfileModal()">✕</button>
+            </div>
+            <div class="profile-modal-body">
+                <!-- Stats -->
+                <div class="profile-stat-row">
+                    <div class="profile-stat-item">
+                        <span class="profile-stat-value" id="modal-talents-count">0</span>
+                        <span class="profile-stat-label">Talents</span>
+                    </div>
+                    <div class="profile-stat-item">
+                        <span class="profile-stat-value" id="modal-collaborators-count">0</span>
+                        <span class="profile-stat-label">Collaborators</span>
+                    </div>
+                </div>
+                <div class="profile-stat-row">
+                    <div class="profile-stat-item">
+                        <span class="profile-stat-value" id="modal-projects-count">0</span>
+                        <span class="profile-stat-label">Projects</span>
+                    </div>
+                    <div class="profile-stat-item">
+                        <span class="profile-stat-value" id="modal-rating-count">0.0</span>
+                        <span class="profile-stat-label">Rating</span>
+                    </div>
+                </div>
+                
+                <!-- Completion -->
+                <div class="profile-completion">
+                    <div class="completion-label">
+                        <span>Profile Completion</span>
+                        <span id="modal-completion-text">0%</span>
+                    </div>
+                    <div class="completion-bar">
+                        <div class="completion-fill" id="modal-completion-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Talents -->
+                <div class="profile-talents-section">
+                    <div class="talents-title">Your Talents</div>
+                    <div class="talents-list" id="modal-talents-list">
+                        <span style="color: #6b7280;">No talents added yet</span>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-modal-footer">
+                <button class="btn-edit-profile" onclick="showEditModal(); closeProfileModal();">✎ Edit Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Profile</h2>
+                <button class="close-btn" onclick="closeEditModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="edit-name" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>Age (optional)</label>
+                    <input type="number" id="edit-age" placeholder="Enter your age">
+                </div>
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea id="edit-bio" rows="5" maxlength="300" placeholder="Tell others about yourself..."></textarea>
+                    <p id="edit-char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">0/300 characters</p>
+                </div>
+                <div class="form-group">
+                    <label>Update Talents</label>
+                    <button class="btn-secondary" onclick="showTalentsModal()">🎯 Update Talents</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveProfileChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Talents Modal -->
+    <div id="talents-modal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Update Your Talents</h2>
+                <button class="close-btn" onclick="closeTalentsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-talent-count" style="color: #a855f7; margin-bottom: 1rem;">0 skills selected</p>
+                <div id="modal-talents-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeTalentsModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveModalTalents()">Save Talents</button>
+            </div>
         </div>
     </div>
 
