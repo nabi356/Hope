@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOPE - Where Talent Meets Opportunity</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="page active">
+        <div class="gradient-bg">
+            <div class="card">
+                <h1>Welcome Back</h1>
+                <p class="subtitle">Sign in to continue your journey</p>
+                <div id="login-error" class="error-box hidden"></div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                </div>
+                <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+                <p class="text-center" style="margin-top: 1rem;">
+                    Don't have an account? <span class="link" onclick="showPage('register-page')">Sign Up</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="register-page" class="page">
+        <div class="gradient-bg">
+            <div class="card">
+                <h1>Create Account</h1>
+                <p class="subtitle">Join the HOPE community</p>
+                <div id="register-error" class="error-box hidden"></div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="register-name" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="register-password" placeholder="Enter your password">
+                </div>
+                <button class="btn-primary" onclick="handleRegister()">Sign Up</button>
+                <p class="text-center" style="margin-top: 1rem;">
+                    Already have an account? <span class="link" onclick="showPage('login-page')">Sign In</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Page -->
+    <div id="welcome-page" class="page">
+        <div class="container text-center">
+            <div class="icon-large">⚡</div>
+            <h1 class="heading-large">Welcome to HOPE!</h1>
+            <p class="subtitle">Let's set up your profile</p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Connect</h3>
+                    <p>Find talented people</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎵</div>
+                    <h3>Showcase</h3>
+                    <p>Display your talents</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Collaborate</h3>
+                    <p>Work on projects</p>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="showPage('talents-page')">Get Started</button>
+        </div>
+    </div>
+
+    <!-- Talents Page -->
+    <div id="talents-page" class="page">
+        <div class="container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 50%"></div>
+            </div>
+            <h1>What are your talents?</h1>
+            <p class="subtitle">Select all skills that describe you</p>
+            <p id="talent-count" style="color: #a855f7; margin-bottom: 1rem;">0 skills selected</p>
+            <div id="talents-container"></div>
+            <button class="btn-primary" onclick="showPage('bio-page')" id="continue-btn" disabled>Continue</button>
+        </div>
+    </div>
+
+    <!-- Bio Page -->
+    <div id="bio-page" class="page">
+        <div class="container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+            </div>
+            <h1>Tell us about yourself</h1>
+            <p class="subtitle">Help others get to know you better</p>
+            <div class="form-group">
+                <label>Age (optional)</label>
+                <input type="number" id="user-age" placeholder="Enter your age">
+            </div>
+            <div class="form-group">
+                <label>Bio</label>
+                <textarea id="user-bio" rows="6" maxlength="300" placeholder="Tell others about yourself..."></textarea>
+                <p id="char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">0/300 characters</p>
+            </div>
+            <button class="btn-primary" onclick="goToDashboard()">Complete Profile</button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-page" class="page">
+        <div class="header-gradient">
+            <div class="header-content">
+                <div>
+                    <h1 class="header-title">⚡ HOPE</h1>
+                    <p>Where Talent Meets Opportunity</p>
+                </div>
+                <div>
+                    <button class="icon-btn">🔔</button>
+                    <button class="icon-btn" onclick="logout()">🚪</button>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <h2>Talents Near You</h2>
+            <div class="user-grid" id="users-list"></div>
+            <h2>Upcoming Events</h2>
+            <div class="event-grid" id="events-list"></div>
+            <h2>Active Challenges</h2>
+            <div class="challenge-grid" id="challenges-list"></div>
+        </div>
+    </div>
+
+    <script src="script/script.js"></script>
+</body>
+</html>
