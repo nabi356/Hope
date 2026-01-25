@@ -1,3 +1,6 @@
+// Script loaded verification
+console.log('HOPE App Script Loaded');
+
 const TALENT_CATEGORIES = [
     {
         id: 'music',
@@ -204,21 +207,45 @@ function findUserByEmail(email) {
 }
 
 function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-    
-    if (pageId === 'talents-page') renderTalents();
-    if (pageId === 'bio-page') setupBioCounter();
+    try {
+        console.log('Attempting to show page:', pageId);
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const pageElement = document.getElementById(pageId);
+        if (!pageElement) {
+            console.error('Page element not found:', pageId);
+            return;
+        }
+        pageElement.classList.add('active');
+        console.log('Successfully showed page:', pageId);
+        
+        if (pageId === 'talents-page') renderTalents();
+        if (pageId === 'bio-page') setupBioCounter();
+    } catch (error) {
+        console.error('Error in showPage:', error);
+    }
 }
 
 async function handleRegister() {
-    const name = document.getElementById('register-name').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
+    console.log('handleRegister called');
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value.trim();
     const errorBox = document.getElementById('register-error');
+
+    // Reset error box
+    errorBox.classList.add('hidden');
+    errorBox.textContent = '';
 
     if (!name || !email || !password) {
         errorBox.textContent = 'Please fill in all fields';
+        errorBox.classList.remove('hidden');
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errorBox.textContent = 'Please enter a valid email';
         errorBox.classList.remove('hidden');
         return;
     }
@@ -230,69 +257,140 @@ async function handleRegister() {
         return;
     }
 
-    // Create new user
-    const newUser = {
-        _id: String(Date.now()),
-        email,
-        name,
-        password,
-        talents: [],
-        bio: '',
-        age: null
-    };
+    try {
+        // Create new user
+        const newUser = {
+            _id: String(Date.now()),
+            email,
+            name,
+            password,
+            talents: [],
+            bio: '',
+            age: null,
+            collaborators: [],
+            projects: [],
+            rating: 0
+        };
 
-    // Save to localStorage
-    saveUser(newUser);
+        // Save to localStorage
+        saveUser(newUser);
 
-    // Store token
-    const token = btoa(JSON.stringify({ userId: newUser._id, email: newUser.email }));
-    localStorage.setItem('token', token);
-    localStorage.setItem('currentUserId', newUser._id);
+        // Store token
+        const token = btoa(JSON.stringify({ userId: newUser._id, email: newUser.email }));
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUserId', newUser._id);
 
-    currentUser = { id: newUser._id, email, name };
-    
-    // Clear form
-    document.getElementById('register-name').value = '';
-    document.getElementById('register-email').value = '';
-    document.getElementById('register-password').value = '';
-    errorBox.classList.add('hidden');
+        currentUser = { id: newUser._id, email, name };
+        
+        // Clear form
+        document.getElementById('register-name').value = '';
+        document.getElementById('register-email').value = '';
+        document.getElementById('register-password').value = '';
+        errorBox.classList.add('hidden');
 
-    showPage('welcome-page');
+        // Navigate to welcome page
+        showPage('welcome-page');
+    } catch (error) {
+        errorBox.textContent = 'An error occurred during registration. Please try again.';
+        errorBox.classList.remove('hidden');
+        console.error('Registration error:', error);
+    }
 }
 
 async function handleLogin() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const errorBox = document.getElementById('login-error');
+    console.log('handleLogin called');
+    try {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const errorBox = document.getElementById('login-error');
 
-    if (!email || !password) {
-        errorBox.textContent = 'Please fill in all fields';
+        // Reset error box
+        errorBox.classList.add('hidden');
+        errorBox.textContent = '';
+
+        if (!email || !password) {
+            errorBox.textContent = 'Please fill in all fields';
+            errorBox.classList.remove('hidden');
+            return;
+        }
+
+        // Find user in localStorage
+        const user = findUserByEmail(email);
+        
+        if (!user || user.password !== password) {
+            errorBox.textContent = 'Invalid email or password';
+            errorBox.classList.remove('hidden');
+            return;
+        }
+
+        // Store token and user ID
+        const token = btoa(JSON.stringify({ userId: user._id, email: user.email }));
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUserId', user._id);
+
+        currentUser = { id: user._id, email: user.email, name: user.name };
+        
+        // Clear form and error
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+        errorBox.classList.add('hidden');
+
+        console.log('Login successful, navigating to page');
+
+        // Check if user has completed profile (has talents and bio)
+        if (user.talents && user.talents.length > 0 && user.bio) {
+            // User completed setup, go to dashboard
+            console.log('User has completed profile, going to dashboard');
+            showPage('dashboard-page');
+            loadDashboard();
+        } else {
+            // User needs to complete setup
+            console.log('User needs to complete setup, going to welcome');
+            showPage('welcome-page');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        const errorBox = document.getElementById('login-error');
+        errorBox.textContent = 'An error occurred. Please try again.';
         errorBox.classList.remove('hidden');
-        return;
+    }
+}
+
+function demoLogin() {
+    // Create a demo user
+    const demoUser = {
+        _id: 'demo-user-' + Date.now(),
+        email: 'demo@hope.com',
+        name: 'Demo User',
+        password: 'demo123',
+        talents: [
+            { id: 'guitar', name: 'Guitar' },
+            { id: 'singing', name: 'Singing' }
+        ],
+        bio: 'I love music and want to collaborate with talented musicians!',
+        age: 25,
+        collaborators: [],
+        projects: [],
+        rating: 4.5
+    };
+
+    // Save demo user
+    const users = getAllUsers();
+    const existingDemo = users.find(u => u.email === 'demo@hope.com');
+    if (!existingDemo) {
+        saveUser(demoUser);
     }
 
-    // Find user in localStorage
-    const user = findUserByEmail(email);
-    
-    if (!user || user.password !== password) {
-        errorBox.textContent = 'Invalid email or password';
-        errorBox.classList.remove('hidden');
-        return;
-    }
-
-    // Store token and user ID
-    const token = btoa(JSON.stringify({ userId: user._id, email: user.email }));
+    // Login with demo account
+    const token = btoa(JSON.stringify({ userId: demoUser._id, email: demoUser.email }));
     localStorage.setItem('token', token);
-    localStorage.setItem('currentUserId', user._id);
+    localStorage.setItem('currentUserId', demoUser._id);
 
-    currentUser = { id: user._id, email: user.email, name: user.name };
+    currentUser = { id: demoUser._id, email: demoUser.email, name: demoUser.name };
     
-    // Clear form and error
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-password').value = '';
-    errorBox.classList.add('hidden');
-
-    showPage('welcome-page');
+    // Go to dashboard
+    showPage('dashboard-page');
+    loadDashboard();
 }
 
 function renderTalents() {
@@ -337,32 +435,44 @@ function setupBioCounter() {
 }
 
 async function goToDashboard() {
-    const currentUserId = localStorage.getItem('currentUserId');
-    
-    if (!currentUserId) return;
+    try {
+        const currentUserId = localStorage.getItem('currentUserId');
+        
+        if (!currentUserId) {
+            console.error('No user ID found');
+            showPage('login-page');
+            return;
+        }
 
-    // Get user data
-    const users = getAllUsers();
-    const user = users.find(u => u._id === currentUserId);
-    
-    if (user) {
-        // Update user with bio and age from form
-        const age = document.getElementById('user-age').value;
-        const bio = document.getElementById('user-bio').value;
-        const talentIndex = users.findIndex(u => u._id === currentUserId);
+        // Get user data
+        const users = getAllUsers();
+        const user = users.find(u => u._id === currentUserId);
         
-        users[talentIndex].age = age ? parseInt(age) : null;
-        users[talentIndex].bio = bio;
-        users[talentIndex].talents = selectedTalents;
-        users[talentIndex].collaborators = users[talentIndex].collaborators || [];
-        users[talentIndex].projects = users[talentIndex].projects || [];
-        users[talentIndex].rating = users[talentIndex].rating || 0;
+        if (user) {
+            // Update user with bio and age from form
+            const ageInput = document.getElementById('user-age');
+            const bioInput = document.getElementById('user-bio');
+            
+            const age = ageInput ? ageInput.value : null;
+            const bio = bioInput ? bioInput.value : '';
+            const talentIndex = users.findIndex(u => u._id === currentUserId);
+            
+            users[talentIndex].age = age ? parseInt(age) : null;
+            users[talentIndex].bio = bio;
+            users[talentIndex].talents = selectedTalents;
+            users[talentIndex].collaborators = users[talentIndex].collaborators || [];
+            users[talentIndex].projects = users[talentIndex].projects || [];
+            users[talentIndex].rating = users[talentIndex].rating || 0;
+            
+            localStorage.setItem('users', JSON.stringify(users));
+        }
         
-        localStorage.setItem('users', JSON.stringify(users));
+        showPage('dashboard-page');
+        loadDashboard();
+    } catch (error) {
+        console.error('Error going to dashboard:', error);
+        showPage('login-page');
     }
-    
-    showPage('dashboard-page');
-    loadDashboard();
 }
 
 async function loadDashboard() {
@@ -383,28 +493,28 @@ async function loadDashboard() {
             </div>
             <h3>${u.name}</h3>
             <p style="color: #a855f7;">${u.talents.join(', ') || 'Multiple talents'}</p>
-            <button class="btn-primary" style="margin-top: 1rem;">Connect</button>
+            <button class="btn-primary" style="margin-top: 1rem;" onclick="openChatWithUser('${u.name}', '${u.avatar}')">Connect</button>
         </div>
     `).join('');
 
     // Get mock events
     const mockEvents = JSON.parse(localStorage.getItem('mockEvents') || '[]');
-    document.getElementById('events-list').innerHTML = mockEvents.map(e => `
+    document.getElementById('events-list').innerHTML = mockEvents.map((e, index) => `
         <div class="event-card">
             <div class="event-image">${e.image}</div>
             <h3>${e.name}</h3>
             <p>${e.location.address}</p>
-            <button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;">Join Event</button>
+            <button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e.name}', ${index})">Join Event</button>
         </div>
     `).join('');
 
     // Get mock challenges
     const mockChallenges = JSON.parse(localStorage.getItem('mockChallenges') || '[]');
-    document.getElementById('challenges-list').innerHTML = mockChallenges.map(c => `
+    document.getElementById('challenges-list').innerHTML = mockChallenges.map((c, index) => `
         <div class="challenge-card">
             <h3>${c.name}</h3>
             <p style="color: #34d399; font-size: 1.5rem; font-weight: bold;">${c.prize}</p>
-            <button class="btn-primary" style="margin-top: 1rem;">Enter Challenge</button>
+            <button class="btn-primary" style="margin-top: 1rem;" onclick="openChallengeRegistration('${c.name}', ${index})">Enter Challenge</button>
         </div>
     `).join('');
 }
@@ -659,4 +769,276 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeProfileModal();
     }
+});
+/* ============= CHAT FUNCTIONALITY ============= */
+
+let currentChatUser = null;
+
+function openChatWithUser(userName, userAvatar) {
+    currentChatUser = {
+        name: userName,
+        avatar: userAvatar
+    };
+    
+    // Open the chat history page
+    openChatHistory();
+    
+    // Delay slightly to ensure page is loaded before opening chat
+    setTimeout(() => {
+        document.getElementById('chat-details-title').textContent = `Chat with ${userName}`;
+        loadChatMessages();
+        document.getElementById('chat-details-empty').classList.add('hidden');
+        document.getElementById('chat-details-active').classList.remove('hidden');
+        document.getElementById('chat-details-input').focus();
+    }, 100);
+}
+
+function backToDashboard() {
+    showPage('dashboard-page');
+    currentChatUser = null;
+}
+
+function loadChatMessages() {
+    if (!currentChatUser) return;
+    
+    const chatKey = `chat_${currentChatUser.name}`;
+    const messages = JSON.parse(localStorage.getItem(chatKey) || '[]');
+    
+    const messagesContainer = document.getElementById('chat-details-messages');
+    messagesContainer.innerHTML = messages.map(msg => `
+        <div class="chat-message ${msg.type}">
+            ${msg.text}
+        </div>
+    `).join('');
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function sendDetailsChatMessage() {
+    if (!currentChatUser) return;
+    
+    const input = document.getElementById('chat-details-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Save message
+    const chatKey = `chat_${currentChatUser.name}`;
+    const messages = JSON.parse(localStorage.getItem(chatKey) || '[]');
+    messages.push({
+        type: 'sent',
+        text: message,
+        timestamp: new Date().toISOString()
+    });
+    localStorage.setItem(chatKey, JSON.stringify(messages));
+    
+    // Clear input
+    input.value = '';
+    
+    // Reload messages
+    loadChatMessages();
+    
+    // Simulate response after 1 second
+    setTimeout(() => {
+        const messagesUpdated = JSON.parse(localStorage.getItem(chatKey) || '[]');
+        messagesUpdated.push({
+            type: 'received',
+            text: `Thanks for reaching out! I'm interested in collaborating with you.`,
+            timestamp: new Date().toISOString()
+        });
+        localStorage.setItem(chatKey, JSON.stringify(messagesUpdated));
+        loadChatMessages();
+    }, 1000);
+}
+
+function openChatHistory() {
+    // Collect all chats
+    const allChats = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('chat_')) {
+            const userName = key.replace('chat_', '');
+            const messages = JSON.parse(localStorage.getItem(key) || '[]');
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                allChats.push({
+                    name: userName,
+                    preview: lastMessage.text.substring(0, 50) + (lastMessage.text.length > 50 ? '...' : ''),
+                    key: key,
+                    timestamp: lastMessage.timestamp
+                });
+            }
+        }
+    }
+    
+    const chatHistoryList = document.getElementById('chat-history-list');
+    if (allChats.length === 0) {
+        chatHistoryList.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 2rem;">No chats yet. Start connecting with people!</p>';
+    } else {
+        chatHistoryList.innerHTML = allChats.map(chat => `
+            <div class="chat-history-item" onclick="openChatFromHistory('${chat.name}')">
+                <div class="chat-history-item-name">${chat.name}</div>
+                <div class="chat-history-item-preview">${chat.preview}</div>
+                <div class="chat-history-item-time">${new Date(chat.timestamp).toLocaleDateString()}</div>
+            </div>
+        `).join('');
+    }
+    
+    showPage('chat-history-page');
+}
+
+function openChatFromHistory(userName) {
+    // Get user avatar from mock users
+    const mockUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+    const user = mockUsers.find(u => u.name === userName);
+    const userAvatar = user ? user.avatar : '👤';
+    
+    openChatWithUser(userName, userAvatar);
+}
+
+/* ============= EVENT & CHALLENGE REGISTRATION FUNCTIONALITY ============= */
+
+let currentEventData = null;
+
+function openEventRegistration(eventName, eventIndex) {
+    console.log('openEventRegistration called with:', eventName, eventIndex);
+    try {
+        const mockEvents = JSON.parse(localStorage.getItem('mockEvents') || '[]');
+        const event = mockEvents[eventIndex];
+        
+        console.log('Event found:', event);
+        
+        currentEventData = {
+            name: eventName,
+            index: eventIndex,
+            event: event,
+            type: 'event'
+        };
+        
+        document.getElementById('event-name-display').textContent = `📍 ${eventName}`;
+        
+        // Pre-fill name and email if user is logged in
+        const currentUserIdFromStorage = localStorage.getItem('currentUserId');
+        const users = getAllUsers();
+        const currentUserData = users.find(u => u._id === currentUserIdFromStorage);
+        if (currentUserData) {
+            document.getElementById('registration-name').value = currentUserData.name;
+            document.getElementById('registration-email').value = currentUserData.email;
+        }
+        
+        const overlay = document.getElementById('registration-overlay');
+        console.log('Overlay element:', overlay);
+        overlay.classList.remove('hidden');
+        console.log('Overlay displayed');
+    } catch (error) {
+        console.error('Error in openEventRegistration:', error);
+    }
+}
+
+function openChallengeRegistration(challengeName, challengeIndex) {
+    console.log('openChallengeRegistration called with:', challengeName, challengeIndex);
+    try {
+        const mockChallenges = JSON.parse(localStorage.getItem('mockChallenges') || '[]');
+        const challenge = mockChallenges[challengeIndex];
+        
+        console.log('Challenge found:', challenge);
+        
+        currentEventData = {
+            name: challengeName,
+            index: challengeIndex,
+            event: challenge,
+            type: 'challenge'
+        };
+        
+        document.getElementById('event-name-display').textContent = `🏆 ${challengeName}`;
+        
+        // Pre-fill name and email if user is logged in
+        const currentUserIdFromStorage = localStorage.getItem('currentUserId');
+        const users = getAllUsers();
+        const currentUserData = users.find(u => u._id === currentUserIdFromStorage);
+        if (currentUserData) {
+            document.getElementById('registration-name').value = currentUserData.name;
+            document.getElementById('registration-email').value = currentUserData.email;
+        }
+        
+        const overlay = document.getElementById('registration-overlay');
+        console.log('Overlay element:', overlay);
+        overlay.classList.remove('hidden');
+        console.log('Overlay displayed');
+    } catch (error) {
+        console.error('Error in openChallengeRegistration:', error);
+    }
+}
+
+function closeEventRegistrationModal(event) {
+    // Handle both direct close and click outside
+    if (event && event.target && event.target.id !== 'registration-overlay') {
+        return;
+    }
+    document.getElementById('registration-overlay').classList.add('hidden');
+    currentEventData = null;
+    
+    // Reset form
+    document.getElementById('registration-name').value = '';
+    document.getElementById('registration-email').value = '';
+    document.getElementById('registration-phone').value = '';
+    document.getElementById('registration-experience').value = '';
+    document.getElementById('registration-availability').value = '';
+    document.getElementById('registration-char-count').textContent = '0/300 characters';
+}
+
+function setupRegistrationCharCounter() {
+    const textarea = document.getElementById('registration-experience');
+    const counter = document.getElementById('registration-char-count');
+    
+    textarea.addEventListener('input', function() {
+        counter.textContent = `${this.value.length}/300 characters`;
+    });
+}
+
+function submitEventRegistration() {
+    const name = document.getElementById('registration-name').value.trim();
+    const email = document.getElementById('registration-email').value.trim();
+    const phone = document.getElementById('registration-phone').value.trim();
+    const experience = document.getElementById('registration-experience').value.trim();
+    const availability = document.getElementById('registration-availability').value;
+    
+    if (!name || !email || !availability) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    // Save registration
+    const registrationKey = `registration_${currentEventData.event._id || currentEventData.index}`;
+    const registrations = JSON.parse(localStorage.getItem(registrationKey) || '[]');
+    
+    registrations.push({
+        name,
+        email,
+        phone,
+        experience,
+        availability,
+        timestamp: new Date().toISOString()
+    });
+    
+    localStorage.setItem(registrationKey, JSON.stringify(registrations));
+    
+    // Show success message
+    alert(`Successfully registered for ${currentEventData.name}! Event organizers will contact you soon.`);
+    
+    // Close modal
+    closeEventRegistrationModal();
+    
+    // Reset form
+    document.getElementById('registration-name').value = '';
+    document.getElementById('registration-email').value = '';
+    document.getElementById('registration-phone').value = '';
+    document.getElementById('registration-experience').value = '';
+    document.getElementById('registration-availability').value = '';
+}
+
+// Initialize registration char counter when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setupRegistrationCharCounter();
 });
