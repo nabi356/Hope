@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOPE - Test Page</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div style="padding: 2rem; text-align: center;">
+        <h1>✅ HOPE App is Loading</h1>
+        <p style="color: #9ca3af; margin: 1rem 0;">Check the console (F12) for status</p>
+        <button class="btn-primary" onclick="testDemo()" style="max-width: 300px;">Test Demo Account</button>
+    </div>
+
+    <script>
+        console.log('Test page loaded');
+        
+        function testDemo() {
+            console.log('Test button clicked');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
