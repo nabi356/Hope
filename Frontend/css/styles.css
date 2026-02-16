@@ -1210,13 +1210,14 @@ select option {
 }
 
 .back-btn {
-    background: none;
+    background: black;
     border: none;
     color: #fff;
+    border-radius: 25px 25px 25px 25px;
     font-size: 1.25rem;
     cursor: pointer;
     padding: 0.5rem 1rem;
-    margin-right: 0.5rem;
+    margin-right: 0.2rem;
     transition: color 0.3s ease;
 }
 
