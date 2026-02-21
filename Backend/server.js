@@ -78,10 +78,27 @@ const messageSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now }
 });
 
+const matchSchema = new mongoose.Schema({
+    userA: { type: String, required: true },
+    userB: { type: String, required: true },
+    status: { type: String, enum: ['pending', 'matched'], default: 'pending' },
+    initiatorId: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+});
+
+const collabSchema = new mongoose.Schema({
+    senderId: { type: String, required: true },
+    receiverId: { type: String, required: true },
+    status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+    timestamp: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model('User', userSchema);
 const Event = mongoose.model('Event', eventSchema);
 const Challenge = mongoose.model('Challenge', challengeSchema);
 const Message = mongoose.model('Message', messageSchema);
+const Match = mongoose.model('Match', matchSchema);
+const Collab = mongoose.model('Collab', collabSchema);
 
 // ----------------- ROUTES ----------------- //
 
@@ -339,6 +356,124 @@ app.get('/api/messages/history/:userId', async (req, res) => {
 
         const history = Array.from(chatMap.values());
         res.json({ history });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- GAMIFIED MATCHES ---
+app.post('/api/matches', async (req, res) => {
+    try {
+        const { currentUserId, targetUserId } = req.body;
+        if (!currentUserId || !targetUserId) return res.status(400).json({ error: "Missing Target IDs" });
+
+        // Ensure userA is always the lexicographically smaller ID to prevent duplicates (A->B and B->A)
+        const [userA, userB] = [currentUserId, targetUserId].sort();
+
+        // Check if an existing match/pending request exists between these two
+        let existingMatch = await Match.findOne({ userA, userB });
+
+        if (existingMatch) {
+            // If it exists and the OPPOSITE person is initiating this time, upgraded to 'matched'
+            if (existingMatch.status === 'pending' && existingMatch.initiatorId !== currentUserId) {
+                existingMatch.status = 'matched';
+                await existingMatch.save();
+                return res.json({ success: true, message: "Mutual Match! You can now chat.", status: 'matched' });
+            } else {
+                return res.json({ success: true, message: "Match request already sent.", status: existingMatch.status });
+            }
+        }
+
+        // Otherwise, create a new pending match request
+        const newMatch = new Match({
+            userA,
+            userB,
+            status: 'pending',
+            initiatorId: currentUserId
+        });
+        await newMatch.save();
+
+        res.json({ success: true, message: "Match request sent!", status: 'pending' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/matches/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        // Fetch all Matches involving this user
+        const matches = await Match.find({
+            $or: [{ userA: userId }, { userB: userId }]
+        }).sort({ timestamp: -1 });
+
+        // We need to return info about the OTHER user.
+        let matchDetails = [];
+        for (let m of matches) {
+            const partnerId = m.userA === userId ? m.userB : m.userA;
+            const partnerDoc = await User.findById(partnerId, 'name avatar talents');
+            if (partnerDoc) {
+                matchDetails.push({
+                    _id: m._id,
+                    status: m.status,
+                    initiatorId: m.initiatorId,
+                    partner: partnerDoc
+                });
+            }
+        }
+        res.json({ matches: matchDetails });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- COLLABORATION REQUESTS ---
+app.post('/api/collabs', async (req, res) => {
+    try {
+        const { senderId, receiverId, action, collabId } = req.body;
+
+        // Action = 'request', 'accept', 'decline'
+        if (action === 'request') {
+            const existing = await Collab.findOne({ senderId, receiverId, status: 'pending' });
+            if (existing) return res.json({ success: true, message: "Collab already pending" });
+
+            const newCollab = new Collab({ senderId, receiverId, status: 'pending' });
+            await newCollab.save();
+            return res.json({ success: true, message: "Collaboration request sent!" });
+        } else if (action === 'accept' || action === 'decline') {
+            if (!collabId) return res.status(400).json({ error: "Missing Collab ID" });
+            const statusStr = action === 'accept' ? 'accepted' : 'declined';
+            await Collab.findByIdAndUpdate(collabId, { status: statusStr });
+            return res.json({ success: true, message: `Collab ${statusStr}` });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/collabs/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const incoming = await Collab.find({ receiverId: userId, status: 'pending' });
+        const outgoing = await Collab.find({ senderId: userId, status: 'pending' });
+        const accepted = await Collab.find({
+            $or: [{ receiverId: userId }, { senderId: userId }],
+            status: 'accepted'
+        });
+
+        // Helper to grab populated user info
+        const populateUser = async (id) => User.findById(id, 'name avatar');
+
+        // Build payload
+        const payloadIncoming = await Promise.all(incoming.map(async c => ({ _id: c._id, user: await populateUser(c.senderId) })));
+        const payloadOutgoing = await Promise.all(outgoing.map(async c => ({ _id: c._id, user: await populateUser(c.receiverId) })));
+
+        const payloadAccepted = await Promise.all(accepted.map(async c => {
+            const partnerId = c.senderId === userId ? c.receiverId : c.senderId;
+            return { _id: c._id, user: await populateUser(partnerId) };
+        }));
+
+        res.json({ incoming: payloadIncoming, outgoing: payloadOutgoing, accepted: payloadAccepted });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

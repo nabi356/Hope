@@ -143,10 +143,11 @@
         <div class="header-glass">
             <div class="header-content">
                 <div class="header-left">
-                    <div class="header-profile-avatar" onclick="showProfileModal()">
+                    <div class="header-profile-avatar" style="position: relative;" onclick="openMatchesModal()">
                         <div class="avatar-wrapper">
-                            <span id="header-avatar-text">👤</span>
+                            <span id="header-avatar-text" style="font-size: 1.5rem;">💌</span>
                         </div>
+                        <div id="match-notification" class="notification-dot hidden"></div>
                         <div class="avatar-pulse"></div>
                     </div>
                     <div>
@@ -155,7 +156,10 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <button class="icon-btn">🔔</button>
+                    <button class="icon-btn" style="position: relative;" onclick="openCollabsModal()">
+                        🔔
+                        <div id="collab-notification" class="notification-dot hidden"></div>
+                    </button>
                     <button class="icon-btn" onclick="openChatHistory()" title="Chat History">💬</button>
                     <button class="icon-btn" onclick="logout()">🚪</button>
                 </div>
@@ -550,6 +554,41 @@
         onclick="this.classList.add('hidden')">
         <img id="zoomed-avatar-img" src=""
             style="max-width: 90%; max-height: 90%; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.8); object-fit: contain;">
+    </div>
+
+    <!-- Matches Hub Modal -->
+    <div id="matches-overlay" class="registration-overlay hidden" onclick="closeMatchesModal(event)">
+        <div class="registration-modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;"
+            onclick="event.stopPropagation()">
+            <div class="registration-header">
+                <h2>💖 Mutual Matches Hub</h2>
+                <button class="close-btn" onclick="closeMatchesModal()">✕</button>
+            </div>
+            <p style="color: #9ca3af; font-size: 0.875rem; margin-bottom: 1rem;">Mutual Matches appear here. Start a
+                chat!</p>
+            <div id="matches-list" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+        </div>
+    </div>
+
+    <!-- Collabs Inbox Modal -->
+    <div id="collabs-overlay" class="registration-overlay hidden" onclick="closeCollabsModal(event)">
+        <div class="registration-modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;"
+            onclick="event.stopPropagation()">
+            <div class="registration-header">
+                <h2>🤝 Collaboration Requests</h2>
+                <button class="close-btn" onclick="closeCollabsModal()">✕</button>
+            </div>
+            <h3 style="margin-top: 1rem; color: #a855f7; font-size: 1rem;">Incoming Requests</h3>
+            <div id="collabs-incoming"
+                style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;"></div>
+
+            <h3 style="color: #6b7280; font-size: 1rem;">Pending Sent Requests</h3>
+            <div id="collabs-outgoing"
+                style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;"></div>
+
+            <h3 style="color: #34d399; font-size: 1rem;">Active Collaborators</h3>
+            <div id="collabs-accepted" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+        </div>
     </div>
 
     <!-- Leaflet JS -->

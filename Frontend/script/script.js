@@ -431,6 +431,9 @@ async function loadDashboard() {
     // Load Maps
     initMap(currentUser.location);
     await fetchNearbyData(currentUser.location.lat, currentUser.location.lng, currentRadiusKm);
+
+    // Polling for notification red dots
+    checkNotifications();
 }
 
 function initMap(centerLoc) {
@@ -499,7 +502,10 @@ function renderUsers(users) {
             <h3>${u.name}</h3>
             <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
-            <button class="btn-primary" style="margin-top: 1rem;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">Connect</button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="btn-primary" style="flex: 1; padding: 0.5rem; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
+                <button class="btn-secondary" style="flex: 1; padding: 0.5rem; border: 1px solid #8b5cf6; color: #8b5cf6;" onclick="requestCollab('${u._id}')">🤝 Collab</button>
+            </div>
         </div>
     `).join('');
 
@@ -1207,7 +1213,10 @@ function openShowAllUsers() {
             <h3>${u.name}</h3>
             <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
-            <button class="btn-primary" style="margin-top: 1rem;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">Connect</button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="btn-primary" style="flex: 1; padding: 0.5rem; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
+                <button class="btn-secondary" style="flex: 1; padding: 0.5rem; border: 1px solid #8b5cf6; color: #8b5cf6;" onclick="requestCollab('${u._id}')">🤝 Collab</button>
+            </div>
         </div>
     `).join('');
     document.getElementById('show-all-overlay').classList.remove('hidden');
@@ -1254,3 +1263,180 @@ function closeShowAllModal() {
 document.addEventListener('DOMContentLoaded', function () {
     setupRegistrationCharCounter();
 });
+
+// ==============================================
+// GAMIFIED MATCHES & COLLABS HUB
+// ==============================================
+
+async function requestMatch(targetUserId) {
+    if (!currentUser) return;
+    try {
+        const res = await apiCall('/matches', 'POST', {
+            currentUserId: currentUser._id || currentUser.id,
+            targetUserId: targetUserId
+        });
+        alert(res.message);
+        checkNotifications();
+    } catch (e) {
+        console.error("Match error", e);
+    }
+}
+
+async function requestCollab(targetUserId) {
+    if (!currentUser) return;
+    try {
+        const res = await apiCall('/collabs', 'POST', {
+            senderId: currentUser._id || currentUser.id,
+            receiverId: targetUserId,
+            action: 'request'
+        });
+        alert(res.message);
+        checkNotifications();
+    } catch (e) {
+        console.error("Collab error", e);
+    }
+}
+
+async function checkNotifications() {
+    if (!currentUser) return;
+    try {
+        const currentUserId = currentUser._id || currentUser.id;
+
+        // Check Matches
+        const matchesRes = await apiCall(`/matches/${currentUserId}`);
+        const activeMatches = matchesRes.matches.filter(m => m.status === 'matched');
+        const matchDot = document.getElementById('match-notification');
+        if (activeMatches.length > 0) {
+            matchDot.classList.remove('hidden');
+        } else {
+            matchDot.classList.add('hidden');
+        }
+
+        // Check Collabs
+        const collabsRes = await apiCall(`/collabs/${currentUserId}`);
+        const collabDot = document.getElementById('collab-notification');
+        if (collabsRes.incoming.length > 0) {
+            collabDot.classList.remove('hidden');
+        } else {
+            collabDot.classList.add('hidden');
+        }
+    } catch (e) {
+        console.error("Notification check failed", e);
+    }
+}
+
+// ---------------- Matches Modal ----------------
+async function openMatchesModal() {
+    if (!currentUser) return;
+    try {
+        const currentUserId = currentUser._id || currentUser.id;
+        const res = await apiCall(`/matches/${currentUserId}`);
+
+        const container = document.getElementById('matches-list');
+        const matchedUsers = res.matches.filter(m => m.status === 'matched');
+
+        if (matchedUsers.length === 0) {
+            container.innerHTML = "<p style='color: #6b7280; font-size: 0.875rem;'>No mutual matches yet. Keep matching!</p>";
+        } else {
+            container.innerHTML = matchedUsers.map(m => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 2rem;">${m.partner.avatar || '👤'}</div>
+                        <div>
+                            <h4 style="margin: 0; font-size: 1.125rem;">${m.partner.name}</h4>
+                            <p style="color: #a855f7; font-size: 0.875rem; margin: 0;">${m.partner.talents ? m.partner.talents.map(t => t.name).join(', ') : ''}</p>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="openChatWithUser('${m.partner._id}', '${m.partner.name}', '${m.partner.avatar || '👤'}'); closeMatchesModal();">Chat</button>
+                </div>
+            `).join('');
+
+            document.getElementById('match-notification').classList.add('hidden');
+        }
+
+        document.getElementById('matches-overlay').classList.remove('hidden');
+    } catch (e) {
+        console.error("Failed to load matches", e);
+    }
+}
+
+function closeMatchesModal() {
+    document.getElementById('matches-overlay').classList.add('hidden');
+}
+
+// ---------------- Collabs Modal ----------------
+async function openCollabsModal() {
+    if (!currentUser) return;
+    try {
+        const currentUserId = currentUser._id || currentUser.id;
+        const res = await apiCall(`/collabs/${currentUserId}`);
+
+        const incomingContainer = document.getElementById('collabs-incoming');
+        const outgoingContainer = document.getElementById('collabs-outgoing');
+        const acceptedContainer = document.getElementById('collabs-accepted');
+
+        // Render Incoming
+        if (res.incoming.length === 0) {
+            incomingContainer.innerHTML = "<p style='color: #6b7280; font-size: 0.875rem;'>No incoming requests.</p>";
+        } else {
+            incomingContainer.innerHTML = res.incoming.map(c => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">${c.user.avatar || '👤'}</span>
+                        <span style="font-weight: 500;">${c.user.name}</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #10b981;" onclick="handleCollabAction('${c._id}', 'accept')">Accept</button>
+                        <button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="handleCollabAction('${c._id}', 'decline')">Decline</button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('collab-notification').classList.add('hidden');
+        }
+
+        // Render Outgoing
+        if (res.outgoing.length === 0) {
+            outgoingContainer.innerHTML = "<p style='color: #6b7280; font-size: 0.875rem;'>No pending requests sent.</p>";
+        } else {
+            outgoingContainer.innerHTML = res.outgoing.map(c => `
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                    <span style="font-size: 1.25rem; opacity: 0.6;">${c.user.avatar || '👤'}</span>
+                    <span style="color: #9ca3af; font-size: 0.875rem;">Waiting on ${c.user.name}...</span>
+                </div>
+            `).join('');
+        }
+
+        // Render Accepted Collaborators
+        if (res.accepted.length === 0) {
+            acceptedContainer.innerHTML = "<p style='color: #6b7280; font-size: 0.875rem;'>No active collaborators yet.</p>";
+        } else {
+            acceptedContainer.innerHTML = res.accepted.map(c => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">${c.user.avatar || '👤'}</span>
+                        <span style="font-weight: 500;">${c.user.name}</span>
+                    </div>
+                    <button class="btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="openChatWithUser('${c.user._id}', '${c.user.name}', '${c.user.avatar || '👤'}'); closeCollabsModal();">Chat</button>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('collabs-overlay').classList.remove('hidden');
+    } catch (e) {
+        console.error("Failed to load collabs", e);
+    }
+}
+
+async function handleCollabAction(collabId, action) {
+    try {
+        const res = await apiCall('/collabs', 'POST', { action, collabId });
+        alert(res.message);
+        openCollabsModal(); // Refresh modal
+    } catch (e) {
+        console.error("Collab action error", e);
+    }
+}
+
+function closeCollabsModal() {
+    document.getElementById('collabs-overlay').classList.add('hidden');
+}
