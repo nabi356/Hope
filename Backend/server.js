@@ -1,0 +1,314 @@
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// User's MongoDB Atlas URI
+const MONGO_URI = 'mongodb+srv://dancernabi_db_user:Nabi2005@cluster0.blsmvvs.mongodb.net/hope_db?appName=Cluster0';
+
+// Haversine formula to calculate distance between two lat/lng pairs in Kilometers
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+
+    function toRad(x) {
+        return x * Math.PI / 180;
+    }
+
+    var R = 6371; // km
+    var x1 = lat2 - lat1;
+    var dLat = toRad(x1);
+    var x2 = lon2 - lon1;
+    var dLon = toRad(x2)
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+}
+
+// ----------------- MONGOOSE SCHEMAS & MODELS ----------------- //
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Connected to MongoDB Atlas via Mongoose.'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+const userSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    password: { type: String, required: true },
+    talents: [{ id: String, name: String }],
+    bio: { type: String, default: '' },
+    age: { type: Number, default: null },
+    location: { lat: Number, lng: Number },
+    collaborators: [String],
+    projects: [String],
+    rating: { type: Number, default: 0 },
+    avatar: { type: String, default: '👤' }
+});
+
+const eventSchema = new mongoose.Schema({
+    name: String,
+    date: String,
+    location: { lat: Number, lng: Number, address: String },
+    image: String,
+    description: String
+});
+
+const challengeSchema = new mongoose.Schema({
+    name: String,
+    prize: String,
+    deadline: String,
+    location: { lat: Number, lng: Number }
+});
+
+const messageSchema = new mongoose.Schema({
+    senderId: { type: String, required: true },
+    receiverId: { type: String, required: true },
+    text: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+const Event = mongoose.model('Event', eventSchema);
+const Challenge = mongoose.model('Challenge', challengeSchema);
+const Message = mongoose.model('Message', messageSchema);
+
+// ----------------- ROUTES ----------------- //
+
+// Register
+app.post('/api/register', async (req, res) => {
+    try {
+        const { email, name, password } = req.body;
+        const existingInfo = await User.findOne({ email });
+        if (existingInfo) return res.status(400).json({ error: 'Email already registered' });
+
+        const newUser = new User({ email, name, password });
+        await newUser.save();
+
+        res.json({ user: newUser, token: Buffer.from(newUser._id.toString()).toString('base64') });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Login
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email, password });
+        if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+        res.json({ user, token: Buffer.from(user._id.toString()).toString('base64') });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get Current User Profile
+app.get('/api/user/:id', async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Invalid ID format' });
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ user });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Profile & Location
+app.put('/api/user/:id', async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Invalid ID format' });
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updatedUser) return res.status(404).json({ error: 'User not found' });
+        res.json({ user: updatedUser });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get Nearby (Users, Events, Challenges)
+app.get('/api/nearby', async (req, res) => {
+    try {
+        const { lat, lng, radiusKm, currentUserId } = req.query;
+        if (!lat || !lng) return res.status(400).json({ error: 'lat and lng required' });
+
+        const rKm = parseFloat(radiusKm) || 20;
+
+        // Fetch all objects. To perform complex geo-scaling, a robust location array with 2dsphere index could be used.
+        // For accurate distance display with the Haversine radius slider, we calculate server-side filtering dynamically.
+        // Fetch current user to determine their talents for strict filtering
+        let currentUserTalents = [];
+        if (currentUserId && mongoose.isValidObjectId(currentUserId)) {
+            const me = await User.findById(currentUserId);
+            if (me && me.talents) {
+                currentUserTalents = me.talents.map(t => t.id);
+            }
+        }
+
+        const queryFilter = currentUserId && mongoose.isValidObjectId(currentUserId)
+            ? { _id: { $ne: currentUserId } } : {};
+        const allUsers = await User.find(queryFilter);
+        const allEvents = await Event.find({});
+        const allChallenges = await Challenge.find({});
+
+        const nearbyUsers = allUsers.filter(u => {
+            if (!u.location || !u.location.lat) return false;
+            const dist = calculateDistance(parseFloat(lat), parseFloat(lng), u.location.lat, u.location.lng);
+            u._doc.distance = dist;
+
+            // Radius check
+            if (dist > rKm) return false;
+
+            // Talent strict match check
+            if (currentUserTalents.length > 0) {
+                const uTalents = u.talents ? u.talents.map(t => t.id) : [];
+                const hasMatch = currentUserTalents.some(t => uTalents.includes(t));
+                if (!hasMatch) return false;
+            }
+
+            return true;
+        }).map(u => {
+            const safe = { ...u._doc };
+            delete safe.password;
+            return safe;
+        });
+
+        const nearbyEvents = allEvents.filter(e => {
+            if (!e.location || !e.location.lat) return false;
+            const dist = calculateDistance(parseFloat(lat), parseFloat(lng), e.location.lat, e.location.lng);
+            e._doc.distance = dist;
+            return dist <= rKm;
+            // Note: Seeded events currently lack a talents array. Returning them based on radius for now.
+        }).map(e => e._doc);
+
+        const nearbyChallenges = allChallenges.filter(c => {
+            if (!c.location || !c.location.lat) return true; // Global challenges
+            const dist = calculateDistance(parseFloat(lat), parseFloat(lng), c.location.lat, c.location.lng);
+            c._doc.distance = dist;
+            return dist <= rKm;
+        }).map(c => c._doc);
+
+        res.json({
+            users: nearbyUsers.sort((a, b) => a.distance - b.distance),
+            events: nearbyEvents.sort((a, b) => a.distance - b.distance),
+            challenges: nearbyChallenges.sort((a, b) => a.distance - b.distance)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Send Chat Message
+app.post('/api/messages', async (req, res) => {
+    try {
+        const { senderId, receiverId, text } = req.body;
+        if (!senderId || !receiverId || !text) return res.status(400).json({ error: 'Missing chat fields' });
+
+        const newMessage = new Message({ senderId, receiverId, text });
+        await newMessage.save();
+
+        res.json({ message: newMessage });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Submit Event/Challenge Registration
+app.post('/api/events/register', async (req, res) => {
+    try {
+        const { eventId, eventName, registrantId, registrationData } = req.body;
+
+        // Find an admin/creator to receive the message (fallback to first user)
+        const admin = await User.findOne();
+        if (!admin) return res.status(404).json({ error: 'No admin found to receive registration' });
+
+        const messageText = `🚨 New Registration for ${eventName}:\n\n` +
+            `Name: ${registrationData.name}\n` +
+            `Email: ${registrationData.email}\n` +
+            `Phone: ${registrationData.phone || 'N/A'}\n` +
+            `Experience: ${registrationData.experience}\n` +
+            `Availability: ${registrationData.availability}`;
+
+        const newMessage = new Message({
+            senderId: registrantId,
+            receiverId: admin._id.toString(),
+            text: messageText
+        });
+
+        await newMessage.save();
+
+        res.json({ success: true, message: 'Registration submitted to organizer.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get Chat History with specific user
+app.get('/api/messages/:partnerId', async (req, res) => {
+    try {
+        const currentUserId = req.query.currentUserId;
+        const partnerId = req.params.partnerId;
+
+        if (!currentUserId || !partnerId) return res.status(400).json({ error: 'Missing user IDs' });
+
+        const messages = await Message.find({
+            $or: [
+                { senderId: currentUserId, receiverId: partnerId },
+                { senderId: partnerId, receiverId: currentUserId }
+            ]
+        }).sort({ timestamp: 1 }); // Oldest first
+
+        res.json({ messages });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get All Active Chats for a User
+app.get('/api/messages/history/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Find all messages involving this user
+        const messages = await Message.find({
+            $or: [{ senderId: userId }, { receiverId: userId }]
+        }).sort({ timestamp: -1 });
+
+        // Group by partner and keep the most recent message
+        const chatMap = new Map();
+
+        for (const msg of messages) {
+            const partnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+
+            if (!chatMap.has(partnerId)) {
+                // Fetch partner details
+                const partner = await User.findById(partnerId, 'name avatar');
+                if (partner) {
+                    chatMap.set(partnerId, {
+                        partnerId: partner._id,
+                        name: partner.name,
+                        avatar: partner.avatar,
+                        lastMessage: msg.text,
+                        timestamp: msg.timestamp
+                    });
+                }
+            }
+        }
+
+        const history = Array.from(chatMap.values());
+        res.json({ history });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`HOPE Backend running on http://localhost:${PORT}`);
+});

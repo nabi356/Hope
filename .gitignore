@@ -162,3 +162,9 @@ Thumbs.db
 
 # Linux
 .directory
+
+# Custom
+Backend/data.json
+Backend/delete_demo.js
+Backend/clean_mock_data.js
+Backend/mongodb_instructions.md

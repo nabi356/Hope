@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOPE - Where Talent Meets Opportunity</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🔗</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🔗</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <!-- Login Page -->
     <div id="login-page" class="page active">
-        <div class="gradient-bg">
-            <div class="card">
+        <div class="animated-bg"></div>
+        <div class="glass-container">
+            <div class="card glass-card">
                 <h1>Welcome Back</h1>
                 <p class="subtitle">Sign in to continue your journey</p>
                 <div id="login-error" class="error-box hidden"></div>
@@ -36,8 +46,9 @@
 
     <!-- Register Page -->
     <div id="register-page" class="page">
-        <div class="gradient-bg">
-            <div class="card">
+        <div class="animated-bg"></div>
+        <div class="glass-container">
+            <div class="card glass-card">
                 <h1>Create Account</h1>
                 <p class="subtitle">Join the HOPE community</p>
                 <div id="register-error" class="error-box hidden"></div>
@@ -98,9 +109,9 @@
             <h1>What are your talents?</h1>
             <p class="subtitle">Select all skills that describe you</p>
             <p id="talent-count" style="color: #a855f7; margin-bottom: 1rem;">0 skills selected</p>
-            
+
             <div id="talents-container"></div>
-            
+
             <button class="btn-primary" onclick="showPage('bio-page')" id="continue-btn" disabled>Continue</button>
         </div>
     </div>
@@ -128,7 +139,8 @@
 
     <!-- Dashboard -->
     <div id="dashboard-page" class="page">
-        <div class="header-gradient">
+        <div class="animated-bg dashboard-bg"></div>
+        <div class="header-glass">
             <div class="header-content">
                 <div class="header-left">
                     <div class="header-profile-avatar" onclick="showProfileModal()">
@@ -170,7 +182,8 @@
                         <div class="progress-bar-horizontal">
                             <div class="progress-fill-horizontal" id="completion-bar" style="width: 0%"></div>
                         </div>
-                        <p id="completion-percentage" style="text-align: center; color: #a855f7; margin-top: 0.5rem;">0% Complete</p>
+                        <p id="completion-percentage" style="text-align: center; color: #a855f7; margin-top: 0.5rem;">0%
+                            Complete</p>
                     </div>
                 </div>
 
@@ -210,6 +223,23 @@
                 <div class="talents-display">
                     <h3>Your Talents</h3>
                     <div id="user-talents-display" class="talents-list"></div>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-section"
+                style="margin-top: 2rem; background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Discover Local Talent</h2>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <label for="radius-slider" style="margin: 0; font-weight: 600;">Radius: <span
+                                id="radius-val">20</span> km</label>
+                        <input type="range" id="radius-slider" min="1" max="100" value="20" style="width: 150px;"
+                            onchange="updateRadius(this.value)">
+                    </div>
+                </div>
+                <div id="nearby-map"
+                    style="height: 400px; width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); z-index: 1;">
                 </div>
             </div>
 
@@ -253,7 +283,8 @@
                     </div>
                     <div id="chat-details-messages" class="chat-messages-details"></div>
                     <div class="chat-input-area">
-                        <input type="text" id="chat-details-input" placeholder="Type your message..." class="chat-input">
+                        <input type="text" id="chat-details-input" placeholder="Type your message..."
+                            class="chat-input">
                         <button class="btn-send" onclick="sendDetailsChatMessage()">Send</button>
                     </div>
                 </div>
@@ -294,7 +325,7 @@
                         <span class="profile-stat-label">Rating</span>
                     </div>
                 </div>
-                
+
                 <!-- Completion -->
                 <div class="profile-completion">
                     <div class="completion-label">
@@ -305,7 +336,7 @@
                         <div class="completion-fill" id="modal-completion-bar" style="width: 0%"></div>
                     </div>
                 </div>
-                
+
                 <!-- Talents -->
                 <div class="profile-talents-section">
                     <div class="talents-title">Your Talents</div>
@@ -338,8 +369,10 @@
                 </div>
                 <div class="form-group">
                     <label>Bio</label>
-                    <textarea id="edit-bio" rows="5" maxlength="300" placeholder="Tell others about yourself..."></textarea>
-                    <p id="edit-char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">0/300 characters</p>
+                    <textarea id="edit-bio" rows="5" maxlength="300"
+                        placeholder="Tell others about yourself..."></textarea>
+                    <p id="edit-char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">0/300
+                        characters</p>
                 </div>
                 <div class="form-group">
                     <label>Update Talents</label>
@@ -376,12 +409,15 @@
                 </div>
                 <div class="form-group">
                     <label>Your Relevant Experience</label>
-                    <textarea id="registration-experience" rows="4" maxlength="300" placeholder="Tell us about your experience in this field..."></textarea>
-                    <p id="registration-char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">0/300 characters</p>
+                    <textarea id="registration-experience" rows="4" maxlength="300"
+                        placeholder="Tell us about your experience in this field..."></textarea>
+                    <p id="registration-char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">
+                        0/300 characters</p>
                 </div>
                 <div class="form-group">
                     <label>Expected Availability</label>
-                    <select id="registration-availability" style="width: 100%; background: #1f2937; border: 2px solid transparent; border-radius: 0.5rem; padding: 0.75rem 1rem; color: #fff; font-size: 1rem;">
+                    <select id="registration-availability"
+                        style="width: 100%; background: #1f2937; border: 2px solid transparent; border-radius: 0.5rem; padding: 0.75rem 1rem; color: #fff; font-size: 1rem;">
                         <option value="">Select availability</option>
                         <option value="full-time">Full Time</option>
                         <option value="part-time">Part Time</option>
@@ -415,6 +451,10 @@
         </div>
     </div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="script/script.js"></script>
 </body>
+
 </html>
