@@ -354,6 +354,19 @@ function setupBioCounter() {
     };
 }
 
+async function getFallbackLocation() {
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.latitude && data.longitude) {
+            return { lat: data.latitude, lng: data.longitude };
+        }
+    } catch (e) {
+        console.warn("IP Geolocation failed", e);
+    }
+    return FALLBACK_LOCATION; // Default to LA if everything fails
+}
+
 async function goToDashboard() {
     try {
         if (!currentUser) {
@@ -361,16 +374,18 @@ async function goToDashboard() {
             return;
         }
 
-        // Ask for geolocation to set profile properly
+        const handleLocationDecision = async (loc) => {
+            await finishProfileSetup(loc);
+        };
+
         if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                await finishProfileSetup(loc);
-            }, async () => {
-                await finishProfileSetup(FALLBACK_LOCATION);
-            });
+            navigator.geolocation.getCurrentPosition(
+                (pos) => handleLocationDecision({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                async () => handleLocationDecision(await getFallbackLocation()),
+                { timeout: 5000, enableHighAccuracy: false } // Fast fallback if it hangs
+            );
         } else {
-            await finishProfileSetup(FALLBACK_LOCATION);
+            handleLocationDecision(await getFallbackLocation());
         }
 
     } catch (error) {
@@ -552,6 +567,22 @@ async function updateProfileDisplay() {
             document.getElementById('profile-name').textContent = user.name;
             document.getElementById('profile-email').textContent = user.email;
 
+            // Handle Avatar Display
+            const avatarContainer = document.getElementById('main-profile-avatar');
+            const placeholder = document.getElementById('avatar-placeholder');
+            if (avatarContainer) {
+                if (user.avatar && user.avatar.startsWith('data:image')) {
+                    avatarContainer.style.backgroundImage = `url(${user.avatar})`;
+                    if (placeholder) placeholder.style.display = 'none';
+                } else {
+                    avatarContainer.style.backgroundImage = 'none';
+                    if (placeholder) {
+                        placeholder.style.display = 'block';
+                        placeholder.textContent = user.avatar || '👤';
+                    }
+                }
+            }
+
             document.getElementById('stats-talents').textContent = user.talents ? user.talents.length : 0;
             document.getElementById('stats-collaborators').textContent = user.collaborators ? user.collaborators.length : 0;
             document.getElementById('stats-projects').textContent = user.projects ? user.projects.length : 0;
@@ -571,6 +602,46 @@ async function updateProfileDisplay() {
     } catch (e) {
         console.error("Profile update failed", e);
     }
+}
+
+// Avatar Upload & Zoom
+function uploadAvatarImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        alert('File is too large. Please select an image under 2MB.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        const base64Image = e.target.result;
+        try {
+            const updateData = { avatar: base64Image };
+            const data = await apiCall(`/user/${currentUser._id || currentUser.id}`, 'PUT', updateData);
+            currentUser = data.user;
+            updateProfileDisplay();
+            alert('Profile picture updated successfully!');
+        } catch (error) {
+            console.error('Failed to upload image', error);
+            alert('Failed to update profile picture.');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function zoomAvatar() {
+    if (!currentUser || !currentUser.avatar) return;
+
+    // Check if avatar is an image vs an emoji
+    const isImage = currentUser.avatar.startsWith('data:image');
+    if (!isImage) return;
+
+    const overlay = document.getElementById('avatar-zoom-overlay');
+    const img = document.getElementById('zoomed-avatar-img');
+    img.src = currentUser.avatar;
+    overlay.classList.remove('hidden');
 }
 
 function closeEditModal() {

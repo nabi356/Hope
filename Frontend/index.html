@@ -166,7 +166,18 @@
             <div class="profile-section">
                 <div class="profile-card">
                     <div class="profile-header">
-                        <div class="profile-avatar">👤</div>
+                        <div class="profile-avatar-container"
+                            style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <div class="profile-avatar" id="main-profile-avatar" onclick="zoomAvatar()"
+                                style="cursor: zoom-in; overflow: hidden; display: flex; align-items: center; justify-content: center; background-position: center; background-size: cover;">
+                                <span id="avatar-placeholder">👤</span>
+                            </div>
+                            <button class="btn-secondary"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px;"
+                                onclick="document.getElementById('avatar-upload').click()">Update Photo</button>
+                            <input type="file" id="avatar-upload" accept="image/*" style="display: none;"
+                                onchange="uploadAvatarImage(event)">
+                        </div>
                         <div class="profile-info">
                             <h2 id="profile-name">User Name</h2>
                             <p id="profile-email" style="color: #9ca3af;">user@email.com</p>
@@ -449,6 +460,14 @@
                 <button class="btn-primary" onclick="saveModalTalents()">Save Talents</button>
             </div>
         </div>
+    </div>
+
+    <!-- Avatar Zoom Modal -->
+    <div id="avatar-zoom-overlay" class="hidden"
+        style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
+        onclick="this.classList.add('hidden')">
+        <img id="zoomed-avatar-img" src=""
+            style="max-width: 90%; max-height: 90%; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.8); object-fit: contain;">
     </div>
 
     <!-- Leaflet JS -->
