@@ -411,6 +411,8 @@ async function finishProfileSetup(location) {
 }
 
 let mapDataLoading = false;
+let globalUsers = [];
+let globalEvents = [];
 
 async function loadDashboard() {
     if (!currentUser) return;
@@ -474,8 +476,11 @@ async function fetchNearbyData(lat, lng, radiusKm) {
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
-        renderUsers(data.users);
-        renderEvents(data.events);
+        globalUsers = data.users || [];
+        globalEvents = data.events || [];
+
+        renderUsers(globalUsers);
+        renderEvents(globalEvents);
         renderChallenges(data.challenges);
 
     } catch (error) {
@@ -484,14 +489,15 @@ async function fetchNearbyData(lat, lng, radiusKm) {
 }
 
 function renderUsers(users) {
-    document.getElementById('users-list').innerHTML = users.map(u => `
+    const displayUsers = users.slice(0, 6);
+    document.getElementById('users-list').innerHTML = displayUsers.map(u => `
         <div class="user-card">
             <div class="user-header">
                 <div class="user-avatar">${u.avatar || '👤'}</div>
                 <div>⭐ ${u.rating ? u.rating.toFixed(1) : '0.0'}</div>
             </div>
             <h3>${u.name}</h3>
-            <p style="color: #a855f7;">${u.talents.map(t => t.name).join(', ') || 'Discovering talents'}</p>
+            <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
             <button class="btn-primary" style="margin-top: 1rem;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">Connect</button>
         </div>
@@ -514,8 +520,9 @@ function renderUsers(users) {
 
 function renderEvents(events) {
     const now = new Date();
+    const displayEvents = events.slice(0, 6);
 
-    document.getElementById('events-list').innerHTML = events.map((e, index) => {
+    document.getElementById('events-list').innerHTML = displayEvents.map((e, index) => {
         // Expiration Logic
         let isExpired = false;
         if (e.registrationEndDate && new Date(e.registrationEndDate) < now) isExpired = true;
@@ -1186,6 +1193,62 @@ async function submitEventRegistration() {
 }
 
 
+
+// Dashboard Show All Modals
+function openShowAllUsers() {
+    if (!globalUsers || globalUsers.length === 0) return;
+    document.getElementById('show-all-title').textContent = 'All Talents Near You';
+    document.getElementById('show-all-grid').innerHTML = globalUsers.map(u => `
+        <div class="user-card">
+            <div class="user-header">
+                <div class="user-avatar">${u.avatar || '👤'}</div>
+                <div>⭐ ${u.rating ? u.rating.toFixed(1) : '0.0'}</div>
+            </div>
+            <h3>${u.name}</h3>
+            <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
+            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
+            <button class="btn-primary" style="margin-top: 1rem;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">Connect</button>
+        </div>
+    `).join('');
+    document.getElementById('show-all-overlay').classList.remove('hidden');
+}
+
+function openShowAllEvents() {
+    if (!globalEvents || globalEvents.length === 0) return;
+    const now = new Date();
+    document.getElementById('show-all-title').textContent = 'All Upcoming Events';
+    document.getElementById('show-all-grid').innerHTML = globalEvents.map((e, index) => {
+        let isExpired = false;
+        if (e.registrationEndDate && new Date(e.registrationEndDate) < now) isExpired = true;
+        if (e.date && new Date(e.date) < now) isExpired = true;
+
+        const feeDisplay = e.entranceFee ? `<p style="color: #34d399; font-weight: bold; margin-top: 0.25rem;">Fee: ${e.entranceFee}</p>` : '';
+        const achievementsDisplay = e.achievements ? `<p style="color: #a855f7; font-size: 0.875rem; margin-top: 0.25rem;">🏆 ${e.achievements}</p>` : '';
+        const regEndDisplay = e.registrationEndDate ? `<p style="color: #fca5a5; font-size: 0.75rem;">Register By: ${new Date(e.registrationEndDate).toLocaleDateString()}</p>` : '';
+
+        const actionButton = isExpired
+            ? `<button class="btn-primary" style="margin-top: 1rem; background: #4b5563; color: #9ca3af; cursor: not-allowed;" disabled>Expired</button>`
+            : `<button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e._id}', '${e.name}')">Join Event</button>`;
+
+        return `
+        <div class="event-card" style="${isExpired ? 'opacity: 0.6;' : ''}">
+            <div class="event-image">${e.image || '🎟️'}</div>
+            <h3>${e.name}</h3>
+            ${feeDisplay}
+            <p style="margin-top: 0.25rem;">📅 ${e.date ? new Date(e.date).toLocaleDateString() : 'TBA'} | 📍 ${e.location?.address || 'Local'}</p>
+            ${regEndDisplay}
+            ${achievementsDisplay}
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-top: 0.5rem;">${e.distance ? e.distance.toFixed(1) + ' km away' : ''}</p>
+            ${actionButton}
+        </div>
+        `;
+    }).join('');
+    document.getElementById('show-all-overlay').classList.remove('hidden');
+}
+
+function closeShowAllModal() {
+    document.getElementById('show-all-overlay').classList.add('hidden');
+}
 
 // Initialize registration char counter when page loads
 document.addEventListener('DOMContentLoaded', function () {

@@ -254,12 +254,22 @@
                 </div>
             </div>
 
-            <h2 style="margin-top: 2rem;">Talents Near You</h2>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Talents Near You</h2>
+                <span class="link" style="font-size: 0.875rem; font-weight: 500;" onclick="openShowAllUsers()">Show
+                    All</span>
+            </div>
             <div class="user-grid" id="users-list"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; margin-bottom: 1rem;">
                 <h2 style="margin: 0;">Upcoming Events</h2>
-                <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                    onclick="openCreateEventModal()">+ Create Event</button>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span class="link" style="font-size: 0.875rem; font-weight: 500;" onclick="openShowAllEvents()">Show
+                        All</span>
+                    <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                        onclick="openCreateEventModal()">+ Create Event</button>
+                </div>
             </div>
             <div class="event-grid" id="events-list"></div>
             <h2>Active Challenges</h2>
@@ -397,6 +407,21 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
                 <button class="btn-primary" onclick="saveProfileChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Show All Expanded Modal -->
+    <div id="show-all-overlay" class="registration-overlay hidden" onclick="closeShowAllModal(event)">
+        <div class="registration-modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;"
+            onclick="event.stopPropagation()">
+            <div class="registration-header">
+                <h2 id="show-all-title">List</h2>
+                <button class="close-btn" onclick="closeShowAllModal()">✕</button>
+            </div>
+            <div id="show-all-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                <!-- Full list injected via JS -->
             </div>
         </div>
     </div>
