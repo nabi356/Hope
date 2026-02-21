@@ -256,7 +256,11 @@
 
             <h2 style="margin-top: 2rem;">Talents Near You</h2>
             <div class="user-grid" id="users-list"></div>
-            <h2>Upcoming Events</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+                <h2 style="margin: 0;">Upcoming Events</h2>
+                <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                    onclick="openCreateEventModal()">+ Create Event</button>
+            </div>
             <div class="event-grid" id="events-list"></div>
             <h2>Active Challenges</h2>
             <div class="challenge-grid" id="challenges-list"></div>
@@ -393,6 +397,59 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
                 <button class="btn-primary" onclick="saveProfileChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div id="create-event-overlay" class="registration-overlay hidden" onclick="closeCreateEventModal(event)">
+        <div class="registration-modal" onclick="event.stopPropagation()">
+            <div class="registration-header">
+                <h2>Create New Event</h2>
+                <button class="close-btn" onclick="closeCreateEventModal()">✕</button>
+            </div>
+            <div class="registration-body">
+                <div class="form-group">
+                    <label>Event Name *</label>
+                    <input type="text" id="create-event-name" class="form-input" placeholder="e.g. Summer Hackathon"
+                        required>
+                </div>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Event Date *</label>
+                        <input type="date" id="create-event-date" class="form-input" required>
+                    </div>
+                    <div>
+                        <label>Registration End Date *</label>
+                        <input type="date" id="create-event-end-date" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Entrance Fee (Price) *</label>
+                        <input type="text" id="create-event-fee" class="form-input" placeholder="e.g. $10 or Free"
+                            required>
+                    </div>
+                    <div>
+                        <label>Location (City/Venue) *</label>
+                        <input type="text" id="create-event-location" class="form-input" placeholder="e.g. New York, NY"
+                            required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Achievements & Benefits</label>
+                    <input type="text" id="create-event-achievements" class="form-input"
+                        placeholder="e.g. Certificate, $500 Prize">
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="create-event-desc" class="form-input" rows="3"
+                        placeholder="Describe the event details..." required></textarea>
+                </div>
+            </div>
+            <div class="registration-footer">
+                <button class="btn-secondary" onclick="closeCreateEventModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitCreateEvent()">Post Event</button>
             </div>
         </div>
     </div>

@@ -513,15 +513,35 @@ function renderUsers(users) {
 }
 
 function renderEvents(events) {
-    document.getElementById('events-list').innerHTML = events.map((e, index) => `
-        <div class="event-card">
+    const now = new Date();
+
+    document.getElementById('events-list').innerHTML = events.map((e, index) => {
+        // Expiration Logic
+        let isExpired = false;
+        if (e.registrationEndDate && new Date(e.registrationEndDate) < now) isExpired = true;
+        if (e.date && new Date(e.date) < now) isExpired = true;
+
+        const feeDisplay = e.entranceFee ? `<p style="color: #34d399; font-weight: bold; margin-top: 0.25rem;">Fee: ${e.entranceFee}</p>` : '';
+        const achievementsDisplay = e.achievements ? `<p style="color: #a855f7; font-size: 0.875rem; margin-top: 0.25rem;">🏆 ${e.achievements}</p>` : '';
+        const regEndDisplay = e.registrationEndDate ? `<p style="color: #fca5a5; font-size: 0.75rem;">Register By: ${new Date(e.registrationEndDate).toLocaleDateString()}</p>` : '';
+
+        const actionButton = isExpired
+            ? `<button class="btn-primary" style="margin-top: 1rem; background: #4b5563; color: #9ca3af; cursor: not-allowed;" disabled>Expired</button>`
+            : `<button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e._id}', '${e.name}')">Join Event</button>`;
+
+        return `
+        <div class="event-card" style="${isExpired ? 'opacity: 0.6;' : ''}">
             <div class="event-image">${e.image || '🎟️'}</div>
             <h3>${e.name}</h3>
-            <p>${e.location?.address || 'Local'}</p>
-            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-top: 0.25rem;">${e.distance ? e.distance.toFixed(1) + ' km away' : ''}</p>
-            <button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e._id}', '${e.name}')">Join Event</button>
+            ${feeDisplay}
+            <p style="margin-top: 0.25rem;">📅 ${e.date ? new Date(e.date).toLocaleDateString() : 'TBA'} | 📍 ${e.location?.address || 'Local'}</p>
+            ${regEndDisplay}
+            ${achievementsDisplay}
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-top: 0.5rem;">${e.distance ? e.distance.toFixed(1) + ' km away' : ''}</p>
+            ${actionButton}
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     // Add event markers
     events.forEach(e => {
@@ -837,6 +857,86 @@ document.addEventListener('click', function (event) {
 document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
         closeProfileModal();
+    }
+});
+
+// Create Event Logic
+function openCreateEventModal() {
+    if (!currentUser) return alert('Please login to create an event');
+    document.getElementById('create-event-overlay').classList.remove('hidden');
+}
+
+function closeCreateEventModal() {
+    document.getElementById('create-event-overlay').classList.add('hidden');
+    // Clear form
+    document.getElementById('create-event-name').value = '';
+    document.getElementById('create-event-date').value = '';
+    document.getElementById('create-event-end-date').value = '';
+    document.getElementById('create-event-fee').value = '';
+    document.getElementById('create-event-location').value = '';
+    document.getElementById('create-event-achievements').value = '';
+    document.getElementById('create-event-desc').value = '';
+}
+
+async function submitCreateEvent() {
+    const name = document.getElementById('create-event-name').value;
+    const date = document.getElementById('create-event-date').value;
+    const regEndDate = document.getElementById('create-event-end-date').value;
+    const fee = document.getElementById('create-event-fee').value;
+    const locationStr = document.getElementById('create-event-location').value;
+    const achievements = document.getElementById('create-event-achievements').value;
+    const desc = document.getElementById('create-event-desc').value;
+
+    if (!name || !date || !regEndDate || !fee || !locationStr || !desc) {
+        return alert("Please fill out all required fields marked with *");
+    }
+
+    try {
+        // Basic OpenStreetMap Geocoding
+        let lat = currentUser.location ? currentUser.location.lat : 0;
+        let lng = currentUser.location ? currentUser.location.lng : 0;
+
+        try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationStr)}`);
+            const geoData = await geoRes.json();
+            if (geoData && geoData.length > 0) {
+                lat = parseFloat(geoData[0].lat);
+                lng = parseFloat(geoData[0].lon);
+            }
+        } catch (e) {
+            console.warn("Geocoding failed, using user's location fallback");
+        }
+
+        const payload = {
+            name: name,
+            date: date,
+            registrationEndDate: regEndDate,
+            entranceFee: fee,
+            location: {
+                address: locationStr,
+                lat: lat,
+                lng: lng
+            },
+            achievements: achievements,
+            description: desc,
+            creatorId: currentUser._id || currentUser.id
+        };
+
+        const result = await apiCall('/events', 'POST', payload);
+        if (result.success) {
+            alert("Event created successfully!");
+            closeCreateEventModal();
+            loadDashboard(); // Refresh UI
+        }
+    } catch (error) {
+        console.error("Created event failed", error);
+        alert("Failed to create event. Please try again later.");
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (document.getElementById('welcome-page')) {
+        showPage('welcome-page');
     }
 });
 /* ============= CHAT FUNCTIONALITY ============= */

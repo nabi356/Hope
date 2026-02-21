@@ -57,7 +57,11 @@ const eventSchema = new mongoose.Schema({
     date: String,
     location: { lat: Number, lng: Number, address: String },
     image: String,
-    description: String
+    description: String,
+    creatorId: String,
+    entranceFee: { type: String, default: "Free" },
+    achievements: String,
+    registrationEndDate: String
 });
 
 const challengeSchema = new mongoose.Schema({
@@ -245,6 +249,37 @@ app.post('/api/events/register', async (req, res) => {
         await newMessage.save();
 
         res.json({ success: true, message: 'Registration submitted to organizer.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Create Custom Event
+app.post('/api/events', async (req, res) => {
+    try {
+        const {
+            name, date, location, image, description,
+            creatorId, entranceFee, achievements, registrationEndDate
+        } = req.body;
+
+        if (!name || !date || !location || !creatorId) {
+            return res.status(400).json({ error: 'Missing required event fields' });
+        }
+
+        const newEvent = new Event({
+            name,
+            date,
+            location,
+            image: image || '🎟️',
+            description,
+            creatorId,
+            entranceFee: entranceFee || 'Free',
+            achievements,
+            registrationEndDate
+        });
+
+        await newEvent.save();
+        res.json({ success: true, event: newEvent });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
