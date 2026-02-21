@@ -152,7 +152,9 @@ const TALENT_CATEGORIES = [
 ];
 
 // Base URL for API calls
-const API_BASE_URL = 'https://hope-backend-445i.onrender.com/api';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : 'https://hope-backend-445i.onrender.com/api';
 
 let selectedTalents = [];
 let currentUser = null;
@@ -502,9 +504,10 @@ function renderUsers(users) {
             <h3>${u.name}</h3>
             <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button class="btn-primary" style="flex: 1; padding: 0.5rem; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
-                <button class="btn-secondary" style="flex: 1; padding: 0.5rem; border: 1px solid #8b5cf6; color: #8b5cf6;" onclick="requestCollab('${u._id}')">🤝 Collab</button>
+            <button class="btn-primary" style="margin-top: 1rem; width: 100%; border-radius: 8px;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">💬 Connect</button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="btn-primary" style="flex: 1; padding: 0.5rem; border-radius: 8px; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
+                <button class="btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 8px; border: 1px solid #8b5cf6; color: #8b5cf6;" onclick="requestCollab('${u._id}')">🤝 Collab</button>
             </div>
         </div>
     `).join('');
@@ -1213,9 +1216,10 @@ function openShowAllUsers() {
             <h3>${u.name}</h3>
             <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button class="btn-primary" style="flex: 1; padding: 0.5rem; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
-                <button class="btn-secondary" style="flex: 1; padding: 0.5rem; border: 1px solid #8b5cf6; color: #8b5cf6;" onclick="requestCollab('${u._id}')">🤝 Collab</button>
+            <button class="btn-primary" style="margin-top: 1rem; width: 100%; border-radius: 8px;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">💬 Connect</button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="btn-primary" style="flex: 1; padding: 0.5rem; border-radius: 8px; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
+                <button class="btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 8px; border: 1px solid #8b5cf6; color: #8b5cf6;" onclick="requestCollab('${u._id}')">🤝 Collab</button>
             </div>
         </div>
     `).join('');
