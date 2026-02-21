@@ -151,8 +151,8 @@ const TALENT_CATEGORIES = [
     }
 ];
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+// Base URL for API calls
+const API_BASE_URL = 'https://hope-backend-445i.onrender.com/api';
 
 let selectedTalents = [];
 let currentUser = null;
