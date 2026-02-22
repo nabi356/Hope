@@ -133,7 +133,33 @@
                 <textarea id="user-bio" rows="6" maxlength="300" placeholder="Tell others about yourself..."></textarea>
                 <p id="char-count" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">0/300 characters</p>
             </div>
-            <button class="btn-primary" onclick="goToDashboard()">Complete Profile</button>
+            <button class="btn-primary" onclick="showPage('location-page')">Next: Set Location</button>
+        </div>
+    </div>
+
+    <!-- Location Page (Phase 8 Fix) -->
+    <div id="location-page" class="page">
+        <div class="container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+            </div>
+            <h1>Where are you based?</h1>
+            <p class="subtitle">Search for your specific city to find local matches</p>
+            <div class="form-group" style="position: relative;">
+                <input type="text" id="city-search-input" placeholder="e.g. Rajkot, Gujarat"
+                    oninput="debounceCitySearch(this.value)">
+                <div id="city-search-results"
+                    style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 8px; margin-top: 0.5rem; max-height: 200px; overflow-y: auto; z-index: 50; display: none; backdrop-filter: blur(16px);">
+                </div>
+            </div>
+
+            <div id="selected-city-display"
+                style="padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; margin-top: 1rem; margin-bottom: 2rem; display: none; align-items: center; gap: 0.5rem;">
+                <span>📍</span> <span id="selected-city-text" style="color: #10b981; font-weight: 500;"></span>
+            </div>
+
+            <button class="btn-primary" id="finalize-profile-btn" onclick="finalizeLocationAndDashboard()"
+                disabled>Complete Profile</button>
         </div>
     </div>
 

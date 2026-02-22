@@ -42,13 +42,14 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     password: { type: String, required: true },
-    talents: [{ id: String, name: String }],
+    talents: [{ id: String, name: String, intent: { type: String, enum: ['train', 'learn'], default: 'learn' } }],
     bio: { type: String, default: '' },
     age: { type: Number, default: null },
-    location: { lat: Number, lng: Number },
+    location: { lat: Number, lng: Number, address: String },
     collaborators: [String],
     projects: [String],
     rating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
     avatar: { type: String, default: '👤' }
 });
 
@@ -149,6 +150,30 @@ app.put('/api/user/:id', async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedUser) return res.status(404).json({ error: 'User not found' });
         res.json({ user: updatedUser });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Rate User API
+app.post('/api/rate', async (req, res) => {
+    try {
+        const { raterId, targetId, score } = req.body;
+        if (!targetId || !score || score < 1 || score > 5) return res.status(400).json({ error: "Invalid rating" });
+
+        const targetUser = await User.findById(targetId);
+        if (!targetUser) return res.status(404).json({ error: "User not found" });
+
+        // Calculate new moving average
+        const newCount = targetUser.ratingCount + 1;
+        const newTotalScore = (targetUser.rating * targetUser.ratingCount) + parseInt(score);
+        const newAverage = newTotalScore / newCount;
+
+        targetUser.rating = newAverage;
+        targetUser.ratingCount = newCount;
+        await targetUser.save();
+
+        res.json({ success: true, newRating: targetUser.rating, message: "Rating submitted successfully!" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

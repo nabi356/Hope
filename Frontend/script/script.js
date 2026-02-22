@@ -325,10 +325,16 @@ function renderTalents() {
             </div>
             <div class="subcategory-grid">
                 ${category.subcategories.map(talent => `
-                    <button class="talent-btn" onclick="toggleTalent('${talent.id}', '${talent.name}', this)">
-                        <div class="talent-icon">${talent.icon}</div>
-                        <div class="talent-name">${talent.name}</div>
-                    </button>
+                    <div class="talent-wrapper" style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <button class="talent-btn" id="btn-${talent.id}" onclick="toggleTalent('${talent.id}', '${talent.name}', this)">
+                            <div class="talent-icon">${talent.icon}</div>
+                            <div class="talent-name">${talent.name}</div>
+                        </button>
+                        <div class="talent-intents hidden" id="intent-${talent.id}" style="display:flex; justify-content:center; gap:0.5rem; font-size: 0.8rem;">
+                            <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="train" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'train')"> 🚀 Train</label>
+                            <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="learn" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'learn')"> 📚 Learn</label>
+                        </div>
+                    </div>
                 `).join('')}
             </div>
         </div>
@@ -336,16 +342,40 @@ function renderTalents() {
 }
 
 function toggleTalent(id, name, btn) {
-    const talent = selectedTalents.find(t => t.id === id);
-    if (talent) {
+    const intentDiv = document.getElementById(`intent-${id}`);
+    const isSelected = btn.classList.contains('selected');
+
+    if (isSelected) {
+        // Deselect
         selectedTalents = selectedTalents.filter(t => t.id !== id);
         btn.classList.remove('selected');
+        intentDiv.classList.add('hidden');
+
+        // Uncheck radios
+        const radios = document.getElementsByName(`intent-${id}`);
+        radios.forEach(r => r.checked = false);
     } else {
-        selectedTalents.push({ id, name });
+        // Expand to ask intent
         btn.classList.add('selected');
+        intentDiv.classList.remove('hidden');
     }
-    document.getElementById('talent-count').textContent = `${selectedTalents.length} skills selected`;
-    document.getElementById('continue-btn').disabled = selectedTalents.length === 0;
+    updateTalentCounter();
+}
+
+function setTalentIntent(id, name, intent) {
+    const existing = selectedTalents.find(t => t.id === id);
+    if (existing) {
+        existing.intent = intent;
+    } else {
+        selectedTalents.push({ id, name, intent });
+    }
+    updateTalentCounter();
+}
+
+function updateTalentCounter() {
+    const validCount = selectedTalents.filter(t => t.intent).length;
+    document.getElementById('talent-count').textContent = `${validCount} skills fully configured`;
+    document.getElementById('continue-btn').disabled = validCount === 0;
 }
 
 function setupBioCounter() {
@@ -493,6 +523,19 @@ async function fetchNearbyData(lat, lng, radiusKm) {
     }
 }
 
+function renderTalentBadges(talents) {
+    if (!talents || talents.length === 0) return '<span style="color: #6b7280; font-size: 0.875rem;">Discovering talents</span>';
+    return talents.map(t => {
+        if (t.intent === 'train') {
+            return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(236,72,153,0.1); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:12px;">🚀 ${t.name}</span>`;
+        } else if (t.intent === 'learn') {
+            return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:12px;">📚 ${t.name}</span>`;
+        } else {
+            return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:12px;">${t.name}</span>`;
+        }
+    }).join('');
+}
+
 function renderUsers(users) {
     const displayUsers = users.slice(0, 6);
     document.getElementById('users-list').innerHTML = displayUsers.map(u => `
@@ -502,7 +545,7 @@ function renderUsers(users) {
                 <div>⭐ ${u.rating ? u.rating.toFixed(1) : '0.0'}</div>
             </div>
             <h3>${u.name}</h3>
-            <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
+            <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-top:0.25rem; justify-content:center;">${renderTalentBadges(u.talents)}</div>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
             <button class="btn-primary" style="margin-top: 1rem; width: 100%; border-radius: 8px;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">💬 Connect</button>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
@@ -521,7 +564,7 @@ function renderUsers(users) {
                     html: `<div style='background-color:#8b5cf6; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white;'>${u.avatar || '👤'}</div>`,
                     iconSize: [30, 30]
                 })
-            }).addTo(map).bindPopup(`<b>${u.name}</b><br>${u.talents.map(t => t.name).join(', ')}`);
+            }).addTo(map).bindPopup(`<b>${u.name}</b><div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-top:0.25rem;">${renderTalentBadges(u.talents)}</div>`);
             markers.push(marker);
         }
     });
@@ -592,6 +635,19 @@ function logout() {
 }
 
 // Profile & Modal Functions
+function calculateProfileCompletion(user) {
+    if (!user) return 0;
+    let score = 0;
+    if (user.name) score += 10;
+    if (user.email) score += 10;
+    if (user.bio && typeof user.bio === 'string' && user.bio.trim() !== '') score += 20;
+    if (user.talents && user.talents.length > 0) score += 20;
+    if (user.age) score += 10;
+    if (user.location && user.location.lat) score += 20;
+    if (user.avatar && user.avatar !== '👤') score += 10;
+    return Math.min(100, score);
+}
+
 async function updateProfileDisplay() {
     if (!currentUser) return;
 
@@ -630,7 +686,7 @@ async function updateProfileDisplay() {
 
             const talentsDisplay = document.getElementById('user-talents-display');
             if (user.talents && user.talents.length > 0) {
-                talentsDisplay.innerHTML = user.talents.map(t => `<div class="talent-tag">${getTalentIcon(t.id)} ${t.name}</div>`).join('');
+                talentsDisplay.innerHTML = renderTalentBadges(user.talents);
             } else {
                 talentsDisplay.innerHTML = '<p style="color: #6b7280;">No talents added yet</p>';
             }
@@ -845,7 +901,7 @@ async function showProfileModal() {
 
             const talentsList = document.getElementById('modal-talents-list');
             if (user.talents && user.talents.length > 0) {
-                talentsList.innerHTML = user.talents.map(t => `<div class="talent-badge">${getTalentIcon(t.id)} ${t.name}</div>`).join('');
+                talentsList.innerHTML = renderTalentBadges(user.talents);
             } else {
                 talentsList.innerHTML = '<span style="color: #6b7280; font-size: 0.875rem;">No talents added yet</span>';
             }
@@ -1214,7 +1270,7 @@ function openShowAllUsers() {
                 <div>⭐ ${u.rating ? u.rating.toFixed(1) : '0.0'}</div>
             </div>
             <h3>${u.name}</h3>
-            <p style="color: #a855f7;">${u.talents && u.talents.length > 0 ? u.talents.map(t => t.name).join(', ') : 'Discovering talents'}</p>
+            <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-top:0.25rem; justify-content:center;">${renderTalentBadges(u.talents)}</div>
             <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
             <button class="btn-primary" style="margin-top: 1rem; width: 100%; border-radius: 8px;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">💬 Connect</button>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
@@ -1419,8 +1475,10 @@ async function openCollabsModal() {
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span style="font-size: 1.5rem;">${c.user.avatar || '👤'}</span>
                         <span style="font-weight: 500;">${c.user.name}</span>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #fef08a; color: #fef08a; background: rgba(254, 240, 138, 0.1);" onclick="rateUser('${c.user._id}', '${c.user.name}')">⭐ Rate</button>
+                        <button class="btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="openChatWithUser('${c.user._id}', '${c.user.name}', '${c.user.avatar || '👤'}'); closeCollabsModal();">Chat</button>
                     </div>
-                    <button class="btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="openChatWithUser('${c.user._id}', '${c.user.name}', '${c.user.avatar || '👤'}'); closeCollabsModal();">Chat</button>
                 </div>
             `).join('');
         }
@@ -1441,6 +1499,86 @@ async function handleCollabAction(collabId, action) {
     }
 }
 
+async function rateUser(targetId, targetName) {
+    const score = prompt(`Rate ${targetName} from 1 to 5 stars:`);
+    if (!score) return;
+    const num = parseInt(score);
+    if (isNaN(num) || num < 1 || num > 5) {
+        alert("Please enter a valid number between 1 and 5.");
+        return;
+    }
+    try {
+        const currentUserId = currentUser._id || currentUser.id;
+        const res = await apiCall('/rate', 'POST', {
+            raterId: currentUserId,
+            targetId: targetId,
+            score: num
+        });
+        alert(`Successfully rated ${targetName} ${num} stars! New average: ${res.newRating.toFixed(1)}`);
+        loadDashboard(); // Refresh current UI rating stats
+    } catch (e) {
+        console.error("Rating failed:", e);
+        alert("Failed to save rating. Try again.");
+    }
+}
+
 function closeCollabsModal() {
     document.getElementById('collabs-overlay').classList.add('hidden');
+}
+
+// ==============================================
+// PHASE 8: NOMINATIM GEOLOCATION SETUP
+// ==============================================
+let locationSearchTimeout;
+let selectedSignupLocation = null;
+
+async function debounceCitySearch(query) {
+    clearTimeout(locationSearchTimeout);
+    const resultsContainer = document.getElementById('city-search-results');
+
+    if (query.length < 3) {
+        resultsContainer.style.display = 'none';
+        return;
+    }
+
+    locationSearchTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+
+            if (data && data.length > 0) {
+                resultsContainer.innerHTML = data.map(place => `
+                    <div class="location-result-item" style="padding: 10px; cursor: pointer; border-bottom: 1px solid var(--glass-border);" 
+                         onclick="selectCityResult(${place.lat}, ${place.lon}, '${place.display_name.replace(/'/g, "\\'")}')">
+                        ${place.display_name}
+                    </div>
+                `).join('');
+                resultsContainer.style.display = 'block';
+            } else {
+                resultsContainer.innerHTML = '<div style="padding: 10px; color: #9ca3af;">No cities found</div>';
+                resultsContainer.style.display = 'block';
+            }
+        } catch (e) {
+            console.error("City search failed:", e);
+        }
+    }, 500);
+}
+
+function selectCityResult(lat, lng, displayName) {
+    selectedSignupLocation = { lat: parseFloat(lat), lng: parseFloat(lng), address: displayName };
+    document.getElementById('city-search-results').style.display = 'none';
+    document.getElementById('city-search-input').value = '';
+
+    document.getElementById('selected-city-text').textContent = displayName;
+    document.getElementById('selected-city-display').style.display = 'flex';
+    document.getElementById('finalize-profile-btn').disabled = false;
+}
+
+async function finalizeLocationAndDashboard() {
+    if (!selectedSignupLocation) return;
+    try {
+        await finishProfileSetup(selectedSignupLocation);
+    } catch (e) {
+        console.error(e);
+    }
 }
