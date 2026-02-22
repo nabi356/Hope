@@ -554,9 +554,13 @@ function renderEvents(events) {
             else intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.3); border-radius:12px; margin-top:0.25rem;">🤝 Collab</span>';
         }
 
-        const actionButton = isExpired
+        let actionButton = isExpired
             ? `<button class="btn-primary" style="margin-top: 1rem; background: #4b5563; color: #9ca3af; cursor: not-allowed;" disabled>Expired</button>`
             : `<button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e._id}', '${e.name}')">Join Event</button>`;
+
+        if (currentUser && e.creatorId === (currentUser._id || currentUser.id)) {
+            actionButton += `<button class="btn-secondary" style="margin-top: 0.5rem; width: 100%; border: 1px solid #ef4444; color: #ef4444; padding: 0.5rem;" onclick="deleteEvent('${e._id}')">🗑️ Delete Event</button>`;
+        }
 
         return `
         <div class="event-card" style="${isExpired ? 'opacity: 0.6;' : ''}">
@@ -591,13 +595,38 @@ function renderEvents(events) {
 }
 
 function renderChallenges(challenges) {
-    document.getElementById('challenges-list').innerHTML = challenges.map((c, index) => `
+    document.getElementById('challenges-list').innerHTML = challenges.map((c, index) => {
+        let actionButton = `<button class="btn-primary" style="margin-top: 1rem;" onclick="openChallengeRegistration('${c._id}', '${c.name}')">Enter Challenge</button>`;
+
+        if (currentUser && c.creatorId === (currentUser._id || currentUser.id)) {
+            actionButton += `<button class="btn-secondary" style="margin-top: 0.5rem; width: 100%; border: 1px solid #ef4444; color: #ef4444; padding: 0.5rem;" onclick="deleteChallenge('${c._id}')">🗑️ Delete Challenge</button>`;
+        }
+
+        return `
         <div class="challenge-card">
             <h3>${c.name}</h3>
             <p style="color: #34d399; font-size: 1.5rem; font-weight: bold;">${c.prize}</p>
-            <button class="btn-primary" style="margin-top: 1rem;" onclick="openChallengeRegistration('${c._id}', '${c.name}')">Enter Challenge</button>
+            ${actionButton}
         </div>
-    `).join('');
+        `;
+    }).join('');
+}
+
+async function deleteChallenge(challengeId) {
+    if (!currentUser) return;
+
+    if (confirm("Are you sure you want to delete this challenge? This cannot be undone.")) {
+        try {
+            const currentUserId = currentUser._id || currentUser.id;
+            await apiCall(`/challenges/${challengeId}?currentUserId=${currentUserId}`, 'DELETE');
+
+            alert("Challenge deleted successfully!");
+            loadDashboard(); // Render the UI actively without the deleted file
+        } catch (e) {
+            console.error("Failed to delete challenge:", e);
+            alert(e.message || "Failed to delete challenge.");
+        }
+    }
 }
 
 function logout() {
@@ -1278,12 +1307,28 @@ function openShowAllEvents() {
         const achievementsDisplay = e.achievements ? `<p style="color: #a855f7; font-size: 0.875rem; margin-top: 0.25rem;">🏆 ${e.achievements}</p>` : '';
         const regEndDisplay = e.registrationEndDate ? `<p style="color: #fca5a5; font-size: 0.75rem;">Register By: ${new Date(e.registrationEndDate).toLocaleDateString()}</p>` : '';
 
-        const actionButton = isExpired
+        let intentBadge = '';
+        if (e.intent) {
+            if (e.intent === 'training') intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(236,72,153,0.1); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:12px; margin-top:0.25rem;">🚀 Training</span>';
+            else if (e.intent === 'learning') intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:12px; margin-top:0.25rem;">📚 Learning</span>';
+            else intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.3); border-radius:12px; margin-top:0.25rem;">🤝 Collab</span>';
+        }
+
+        let actionButton = isExpired
             ? `<button class="btn-primary" style="margin-top: 1rem; background: #4b5563; color: #9ca3af; cursor: not-allowed;" disabled>Expired</button>`
             : `<button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e._id}', '${e.name}')">Join Event</button>`;
 
+        if (currentUser && e.creatorId === (currentUser._id || currentUser.id)) {
+            actionButton += `<button class="btn-secondary" style="margin-top: 0.5rem; width: 100%; border: 1px solid #ef4444; color: #ef4444; padding: 0.5rem;" onclick="deleteEvent('${e._id}')">🗑️ Delete Event</button>`;
+        }
+
         return `
         <div class="event-card" style="${isExpired ? 'opacity: 0.6;' : ''}">
+            <div class="event-image">${e.image || '🎟️'}</div>
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <h3>${e.name}</h3>
+                ${intentBadge}
+            </div>
             <div class="event-image">${e.image || '🎟️'}</div>
             <h3>${e.name}</h3>
             ${feeDisplay}
@@ -1310,6 +1355,26 @@ document.addEventListener('DOMContentLoaded', function () {
 // ==============================================
 // GAMIFIED MATCHES & COLLABS HUB
 // ==============================================
+
+async function deleteEvent(eventId) {
+    if (!currentUser) return;
+
+    if (confirm("Are you sure you want to delete this event? This cannot be undone.")) {
+        try {
+            const currentUserId = currentUser._id || currentUser.id;
+            await apiCall(`/events/${eventId}?currentUserId=${currentUserId}`, 'DELETE');
+
+            // Close the expanded modal if it is open
+            document.getElementById('show-all-overlay').classList.add('hidden');
+
+            alert("Event deleted successfully!");
+            loadDashboard(); // Render the UI actively without the deleted file
+        } catch (e) {
+            console.error("Failed to delete event:", e);
+            alert(e.message || "Failed to delete event.");
+        }
+    }
+}
 
 async function requestMatch(targetUserId) {
     if (!currentUser) return;

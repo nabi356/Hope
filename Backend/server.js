@@ -324,6 +324,54 @@ app.post('/api/events', async (req, res) => {
     }
 });
 
+// Delete Custom Event
+app.delete('/api/events/:id', async (req, res) => {
+    try {
+        const eventId = req.params.id;
+        const currentUserId = req.query.currentUserId; // passed as query param for DELETE
+
+        if (!currentUserId || !eventId || !mongoose.isValidObjectId(eventId)) {
+            return res.status(400).json({ error: 'Invalid request parameters' });
+        }
+
+        const eventTarget = await Event.findById(eventId);
+        if (!eventTarget) return res.status(404).json({ error: 'Event not found' });
+
+        if (eventTarget.creatorId !== currentUserId) {
+            return res.status(403).json({ error: 'Unauthorized to delete this event' });
+        }
+
+        await Event.findByIdAndDelete(eventId);
+        res.json({ success: true, message: "Event deleted successfully." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete Custom Challenge
+app.delete('/api/challenges/:id', async (req, res) => {
+    try {
+        const challengeId = req.params.id;
+        const currentUserId = req.query.currentUserId;
+
+        if (!currentUserId || !challengeId || !mongoose.isValidObjectId(challengeId)) {
+            return res.status(400).json({ error: 'Invalid request parameters' });
+        }
+
+        const challengeTarget = await Challenge.findById(challengeId);
+        if (!challengeTarget) return res.status(404).json({ error: 'Challenge not found' });
+
+        if (challengeTarget.creatorId !== currentUserId) {
+            return res.status(403).json({ error: 'Unauthorized to delete this challenge' });
+        }
+
+        await Challenge.findByIdAndDelete(challengeId);
+        res.json({ success: true, message: "Challenge deleted successfully." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Get Chat History with specific user
 app.get('/api/messages/:partnerId', async (req, res) => {
     try {
