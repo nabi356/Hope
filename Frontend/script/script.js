@@ -386,46 +386,6 @@ function setupBioCounter() {
     };
 }
 
-async function getFallbackLocation() {
-    try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        if (data.latitude && data.longitude) {
-            return { lat: data.latitude, lng: data.longitude };
-        }
-    } catch (e) {
-        console.warn("IP Geolocation failed", e);
-    }
-    return FALLBACK_LOCATION; // Default to LA if everything fails
-}
-
-async function goToDashboard() {
-    try {
-        if (!currentUser) {
-            showPage('login-page');
-            return;
-        }
-
-        const handleLocationDecision = async (loc) => {
-            await finishProfileSetup(loc);
-        };
-
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => handleLocationDecision({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                async () => handleLocationDecision(await getFallbackLocation()),
-                { timeout: 5000, enableHighAccuracy: false } // Fast fallback if it hangs
-            );
-        } else {
-            handleLocationDecision(await getFallbackLocation());
-        }
-
-    } catch (error) {
-        console.error('Error going to dashboard:', error);
-        showPage('login-page');
-    }
-}
-
 async function finishProfileSetup(location) {
     const ageInput = document.getElementById('user-age');
     const bioInput = document.getElementById('user-bio');
