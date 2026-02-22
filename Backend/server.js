@@ -213,12 +213,7 @@ app.get('/api/nearby', async (req, res) => {
             // Radius check
             if (dist > rKm) return false;
 
-            // Talent strict match check
-            if (currentUserTalents.length > 0) {
-                const uTalents = u.talents ? u.talents.map(t => t.id) : [];
-                const hasMatch = currentUserTalents.some(t => uTalents.includes(t));
-                if (!hasMatch) return false;
-            }
+            // Note: Strict Talent match check was removed here to ensure all nearby users are visible globally.
 
             return true;
         }).map(u => {

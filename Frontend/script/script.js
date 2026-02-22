@@ -179,8 +179,8 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     }
 }
 
-// User location fallback if not provided
-const FALLBACK_LOCATION = { lat: 34.0522, lng: -118.2437 }; // Default LA
+// User location fallback if not provided (DEPRECATED - Replaced by required Nominatim Check)
+// const FALLBACK_LOCATION = { lat: 34.0522, lng: -118.2437 }; // Default LA
 
 function showPage(pageId) {
     try {
@@ -264,11 +264,15 @@ async function handleLogin() {
         errorBox.classList.add('hidden');
 
         // Determine next page setup
-        if (currentUser.talents && currentUser.talents.length > 0 && currentUser.bio) {
+        if (!currentUser.talents || currentUser.talents.length === 0) {
+            showPage('welcome-page');
+        } else if (!currentUser.bio) {
+            showPage('bio-page');
+        } else if (!currentUser.location || !currentUser.location.address) {
+            showPage('location-page');
+        } else {
             showPage('dashboard-page');
             loadDashboard();
-        } else {
-            showPage('welcome-page');
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -418,7 +422,6 @@ async function loadDashboard() {
     }
 
     updateProfileDisplay();
-    if (!currentUser.location) currentUser.location = FALLBACK_LOCATION;
 
     // Load Maps
     initMap(currentUser.location);
@@ -834,8 +837,16 @@ window.onload = async () => {
             const user = data.user;
             if (user) {
                 currentUser = user;
-                showPage('dashboard-page');
-                loadDashboard();
+                if (!currentUser.talents || currentUser.talents.length === 0) {
+                    showPage('welcome-page');
+                } else if (!currentUser.bio) {
+                    showPage('bio-page');
+                } else if (!currentUser.location || !currentUser.location.address) {
+                    showPage('location-page');
+                } else {
+                    showPage('dashboard-page');
+                    loadDashboard();
+                }
             } else {
                 logout();
             }
