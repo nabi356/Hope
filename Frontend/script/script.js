@@ -1500,10 +1500,52 @@ function closeCollabsModal() {
 }
 
 // ==============================================
-// PHASE 8: NOMINATIM GEOLOCATION SETUP
+// PHASE 8 & 9: NOMINATIM GEOLOCATION SETUP & UX
 // ==============================================
+
+function togglePasswordVisibility(inputId, iconElement) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        iconElement.textContent = '❌';
+    } else {
+        input.type = 'password';
+        iconElement.textContent = '👁️';
+    }
+}
+
 let locationSearchTimeout;
 let selectedSignupLocation = null;
+
+async function detectGPSLocation() {
+    if ("geolocation" in navigator) {
+        document.getElementById('city-search-input').placeholder = "Locating via GPS...";
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            try {
+                // Reverse geocode to get city name
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const data = await res.json();
+
+                const cityName = data.address.city || data.address.town || data.address.village || "Current Location";
+
+                // Emulate selection
+                selectCityResult(lat, lng, cityName);
+                document.getElementById('city-search-input').placeholder = "e.g. Rajkot, Gujarat"; // Reset
+            } catch (e) {
+                console.error("Reverse geocoding failed", e);
+                alert("GPS detected, but failed to extract city name automatically.");
+            }
+        }, (err) => {
+            alert("Location access denied or timed out. Please type your city manually.");
+            document.getElementById('city-search-input').placeholder = "e.g. Rajkot, Gujarat"; // Reset
+        });
+    } else {
+        alert("Geolocation is not supported by your browser.");
+    }
+}
 
 async function debounceCitySearch(query) {
     clearTimeout(locationSearchTimeout);

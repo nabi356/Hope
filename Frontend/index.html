@@ -31,7 +31,12 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="login-password" placeholder="Enter your password">
+                    <div style="position: relative;">
+                        <input type="password" id="login-password" placeholder="Enter your password"
+                            style="width: 100%; padding-right: 2.5rem;">
+                        <span onclick="togglePasswordVisibility('login-password', this)"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #9ca3af; user-select: none;">👁️</span>
+                    </div>
                 </div>
                 <button class="btn-primary" onclick="handleLogin()">Sign In</button>
                 <p class="text-center" style="margin-top: 1rem;">
@@ -63,7 +68,12 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="register-password" placeholder="Enter your password">
+                    <div style="position: relative;">
+                        <input type="password" id="register-password" placeholder="Enter your password"
+                            style="width: 100%; padding-right: 2.5rem;">
+                        <span onclick="togglePasswordVisibility('register-password', this)"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #9ca3af; user-select: none;">👁️</span>
+                    </div>
                 </div>
                 <button class="btn-primary" onclick="handleRegister()">Sign Up</button>
                 <p class="text-center" style="margin-top: 1rem;">
@@ -145,9 +155,11 @@
             </div>
             <h1>Where are you based?</h1>
             <p class="subtitle">Search for your specific city to find local matches</p>
-            <div class="form-group" style="position: relative;">
+            <div class="form-group" style="position: relative; display: flex; gap: 0.5rem;">
                 <input type="text" id="city-search-input" placeholder="e.g. Rajkot, Gujarat"
-                    oninput="debounceCitySearch(this.value)">
+                    oninput="debounceCitySearch(this.value)" style="flex: 1;">
+                <button class="btn-secondary" style="white-space: nowrap; padding: 0 1rem;"
+                    onclick="detectGPSLocation()">📍 Detect Location</button>
                 <div id="city-search-results"
                     style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 8px; margin-top: 0.5rem; max-height: 200px; overflow-y: auto; z-index: 50; display: none; backdrop-filter: blur(16px);">
                 </div>
