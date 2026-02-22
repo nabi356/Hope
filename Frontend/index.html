@@ -491,10 +491,20 @@
                             required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Achievements & Benefits</label>
-                    <input type="text" id="create-event-achievements" class="form-input"
-                        placeholder="e.g. Certificate, $500 Prize">
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Event Intent *</label>
+                        <select id="create-event-intent" class="form-input" required>
+                            <option value="training">🚀 Training / Workshop</option>
+                            <option value="learning">📚 Learning / Study Group</option>
+                            <option value="collaboration">🤝 General Collaboration</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Achievements & Benefits</label>
+                        <input type="text" id="create-event-achievements" class="form-input"
+                            placeholder="e.g. Certificate, Prize">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Description *</label>

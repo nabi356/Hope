@@ -59,6 +59,7 @@ const eventSchema = new mongoose.Schema({
     location: { lat: Number, lng: Number, address: String },
     image: String,
     description: String,
+    intent: { type: String, enum: ['training', 'learning', 'collaboration'], default: 'collaboration' },
     creatorId: String,
     entranceFee: { type: String, default: "Free" },
     achievements: String,
@@ -300,7 +301,7 @@ app.post('/api/events/register', async (req, res) => {
 app.post('/api/events', async (req, res) => {
     try {
         const {
-            name, date, location, image, description,
+            name, date, location, image, description, intent,
             creatorId, entranceFee, achievements, registrationEndDate
         } = req.body;
 
@@ -314,6 +315,7 @@ app.post('/api/events', async (req, res) => {
             location,
             image: image || '🎟️',
             description,
+            intent: intent || 'collaboration',
             creatorId,
             entranceFee: entranceFee || 'Free',
             achievements,

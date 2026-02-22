@@ -584,6 +584,13 @@ function renderEvents(events) {
         const achievementsDisplay = e.achievements ? `<p style="color: #a855f7; font-size: 0.875rem; margin-top: 0.25rem;">🏆 ${e.achievements}</p>` : '';
         const regEndDisplay = e.registrationEndDate ? `<p style="color: #fca5a5; font-size: 0.75rem;">Register By: ${new Date(e.registrationEndDate).toLocaleDateString()}</p>` : '';
 
+        let intentBadge = '';
+        if (e.intent) {
+            if (e.intent === 'training') intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(236,72,153,0.1); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:12px; margin-top:0.25rem;">🚀 Training</span>';
+            else if (e.intent === 'learning') intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:12px; margin-top:0.25rem;">📚 Learning</span>';
+            else intentBadge = '<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.3); border-radius:12px; margin-top:0.25rem;">🤝 Collab</span>';
+        }
+
         const actionButton = isExpired
             ? `<button class="btn-primary" style="margin-top: 1rem; background: #4b5563; color: #9ca3af; cursor: not-allowed;" disabled>Expired</button>`
             : `<button class="btn-primary" style="margin-top: 1rem; background: white; color: #7c3aed;" onclick="openEventRegistration('${e._id}', '${e.name}')">Join Event</button>`;
@@ -591,7 +598,10 @@ function renderEvents(events) {
         return `
         <div class="event-card" style="${isExpired ? 'opacity: 0.6;' : ''}">
             <div class="event-image">${e.image || '🎟️'}</div>
-            <h3>${e.name}</h3>
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <h3>${e.name}</h3>
+                ${intentBadge}
+            </div>
             ${feeDisplay}
             <p style="margin-top: 0.25rem;">📅 ${e.date ? new Date(e.date).toLocaleDateString() : 'TBA'} | 📍 ${e.location?.address || 'Local'}</p>
             ${regEndDisplay}
@@ -956,6 +966,7 @@ async function submitCreateEvent() {
     const regEndDate = document.getElementById('create-event-end-date').value;
     const fee = document.getElementById('create-event-fee').value;
     const locationStr = document.getElementById('create-event-location').value;
+    const intent = document.getElementById('create-event-intent').value;
     const achievements = document.getElementById('create-event-achievements').value;
     const desc = document.getElementById('create-event-desc').value;
 
@@ -984,6 +995,7 @@ async function submitCreateEvent() {
             date: date,
             registrationEndDate: regEndDate,
             entranceFee: fee,
+            intent: intent,
             location: {
                 address: locationStr,
                 lat: lat,
@@ -1494,6 +1506,7 @@ async function handleCollabAction(collabId, action) {
         const res = await apiCall('/collabs', 'POST', { action, collabId });
         alert(res.message);
         openCollabsModal(); // Refresh modal
+        loadDashboard(); // Core Fix: Realtime refresh dashboard Gamification metrics
     } catch (e) {
         console.error("Collab action error", e);
     }
