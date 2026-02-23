@@ -334,9 +334,13 @@ function renderTalents() {
                             <div class="talent-icon">${talent.icon}</div>
                             <div class="talent-name">${talent.name}</div>
                         </button>
-                        <div class="talent-intents hidden" id="intent-${talent.id}" style="display:flex; justify-content:center; gap:0.5rem; font-size: 0.8rem;">
-                            <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="train" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'train')"> 🚀 Train</label>
-                            <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="learn" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'learn')"> 📚 Learn</label>
+                        <div class="talent-intents hidden" id="intent-${talent.id}" style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; font-size: 0.8rem; margin-top: 0.5rem;">
+                            <div style="display:flex; gap:0.5rem; flex-wrap: wrap; justify-content:center;">
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="train" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'train')"> 🚀 Train</label>
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="learn" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'learn')"> 📚 Learn</label>
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem; color:#eab308; font-weight:bold;"><input type="radio" name="intent-${talent.id}" value="hire" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'hire')"> 💰 Hire Me</label>
+                            </div>
+                            <input type="number" id="rate-input-${talent.id}" class="hidden" placeholder="₹ Rate / hr" style="padding:0.25rem; border-radius:4px; border:1px solid #374151; background:#1f2937; color:white; width:80px; text-align:center; margin-top:0.2rem;" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'hire')">
                         </div>
                     </div>
                 `).join('')}
@@ -355,9 +359,11 @@ function toggleTalent(id, name, btn) {
         btn.classList.remove('selected');
         intentDiv.classList.add('hidden');
 
-        // Uncheck radios
+        // Uncheck radios and hide rate input
         const radios = document.getElementsByName(`intent-${id}`);
         radios.forEach(r => r.checked = false);
+        const rateInput = document.getElementById(`rate-input-${id}`);
+        if (rateInput) { rateInput.classList.add('hidden'); rateInput.value = ''; }
     } else {
         // Expand to ask intent
         btn.classList.add('selected');
@@ -368,10 +374,22 @@ function toggleTalent(id, name, btn) {
 
 function setTalentIntent(id, name, intent) {
     const existing = selectedTalents.find(t => t.id === id);
+    const rateInput = document.getElementById(`rate-input-${id}`);
+
+    let hourlyRate = 0;
+
+    if (intent === 'hire') {
+        rateInput.classList.remove('hidden');
+        hourlyRate = parseInt(rateInput.value) || 0;
+    } else {
+        rateInput.classList.add('hidden');
+    }
+
     if (existing) {
         existing.intent = intent;
+        existing.hourlyRate = hourlyRate;
     } else {
-        selectedTalents.push({ id, name, intent });
+        selectedTalents.push({ id, name, intent, hourlyRate });
     }
     updateTalentCounter();
 }
@@ -519,6 +537,9 @@ function renderTalentBadges(talents) {
             return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(236,72,153,0.1); color:#ec4899; border:1px solid rgba(236,72,153,0.3); border-radius:12px;">🚀 ${t.name}</span>`;
         } else if (t.intent === 'learn') {
             return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:12px;">📚 ${t.name}</span>`;
+        } else if (t.intent === 'hire') {
+            const rateStr = t.hourlyRate ? ` [₹${t.hourlyRate}/hr]` : '';
+            return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(234,179,8,0.1); color:#eab308; border:1px solid rgba(234,179,8,0.3); border-radius:12px; font-weight:bold;">💰 ${t.name}${rateStr}</span>`;
         } else {
             return `<span style="display:inline-block; font-size:0.75rem; padding:0.15rem 0.5rem; background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:12px;">${t.name}</span>`;
         }

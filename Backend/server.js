@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     password: { type: String, required: true },
-    talents: [{ id: String, name: String, intent: { type: String, enum: ['train', 'learn'], default: 'learn' } }],
+    talents: [{ id: String, name: String, intent: { type: String, enum: ['train', 'learn', 'hire'], default: 'learn' }, hourlyRate: { type: Number, default: 0 } }],
     bio: { type: String, default: '' },
     age: { type: Number, default: null },
     location: { lat: Number, lng: Number, address: String },
