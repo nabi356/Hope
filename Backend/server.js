@@ -63,7 +63,8 @@ const eventSchema = new mongoose.Schema({
     creatorId: String,
     entranceFee: { type: String, default: "Free" },
     achievements: String,
-    registrationEndDate: String
+    registrationEndDate: String,
+    attendees: [String]
 });
 
 const challengeSchema = new mongoose.Schema({
@@ -275,6 +276,16 @@ app.post('/api/messages', async (req, res) => {
 app.post('/api/events/register', async (req, res) => {
     try {
         const { eventId, eventName, registrantId, registrationData } = req.body;
+
+        if (eventId && mongoose.isValidObjectId(eventId)) {
+            const ev = await Event.findById(eventId);
+            if (ev) {
+                if (!ev.attendees.includes(registrantId)) {
+                    ev.attendees.push(registrantId);
+                    await ev.save();
+                }
+            }
+        }
 
         // Find an admin/creator to receive the message (fallback to first user)
         const admin = await User.findOne();

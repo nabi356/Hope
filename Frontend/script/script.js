@@ -421,6 +421,26 @@ async function loadDashboard() {
         console.error(e);
     }
 
+    // Live Geolocation Tracking
+    if (navigator.geolocation) {
+        try {
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 0 });
+            });
+            const newLat = pos.coords.latitude;
+            const newLng = pos.coords.longitude;
+
+            // If the user has physically moved, update DB silently before querying Nearby Array
+            if (currentUser.location && (Math.abs(currentUser.location.lat - newLat) > 0.005 || Math.abs(currentUser.location.lng - newLng) > 0.005)) {
+                currentUser.location = { lat: newLat, lng: newLng, address: currentUser.location.address || 'Live Location' };
+                await apiCall(`/user/${currentUser._id || currentUser.id}`, 'PUT', { location: currentUser.location });
+                console.log("Live Location Updated Automatically.");
+            }
+        } catch (err) {
+            console.warn("Silent GPS update failed or timed out", err);
+        }
+    }
+
     updateProfileDisplay();
 
     // Load Maps
@@ -483,6 +503,9 @@ async function fetchNearbyData(lat, lng, radiusKm) {
         // Cache challenges in DOM for search filtering
         document.getElementById('challenges-list').setAttribute('data-cached-challenges', JSON.stringify(data.challenges || []));
         renderChallenges(data.challenges || []);
+
+        // Re-hydrate profile stats with updated event metrics
+        updateProfileDisplay();
 
     } catch (error) {
         console.error('Error fetching nearby data', error);
@@ -730,6 +753,11 @@ async function updateProfileDisplay() {
             document.getElementById('stats-talents').textContent = user.talents ? user.talents.length : 0;
             document.getElementById('stats-collaborators').textContent = user.collaborators ? user.collaborators.length : 0;
             document.getElementById('stats-projects').textContent = user.projects ? user.projects.length : 0;
+
+            const currentId = currentUser._id || currentUser.id;
+            const joinedEvents = globalEvents ? globalEvents.filter(e => e.attendees && e.attendees.includes(currentId)).length : 0;
+            document.getElementById('stats-events').textContent = joinedEvents;
+
             document.getElementById('stats-rating').textContent = user.rating ? user.rating.toFixed(1) : '0.0';
 
             const completion = calculateProfileCompletion(user);
