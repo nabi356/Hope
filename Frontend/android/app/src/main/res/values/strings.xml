@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HOPE Network</string>
+    <string name="title_activity_main">HOPE Network</string>
+    <string name="package_name">com.hope.app</string>
+    <string name="custom_url_scheme">com.hope.app</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "appId": "com.hope.app",
+  "appName": "HOPE Network",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
