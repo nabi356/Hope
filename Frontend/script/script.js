@@ -479,7 +479,10 @@ async function fetchNearbyData(lat, lng, radiusKm) {
 
         renderUsers(globalUsers);
         renderEvents(globalEvents);
-        renderChallenges(data.challenges);
+
+        // Cache challenges in DOM for search filtering
+        document.getElementById('challenges-list').setAttribute('data-cached-challenges', JSON.stringify(data.challenges || []));
+        renderChallenges(data.challenges || []);
 
     } catch (error) {
         console.error('Error fetching nearby data', error);
@@ -626,6 +629,53 @@ async function deleteChallenge(challengeId) {
             console.error("Failed to delete challenge:", e);
             alert(e.message || "Failed to delete challenge.");
         }
+    }
+}
+
+// ==============================================
+// Dashboard Search Filter
+// ==============================================
+function filterDashboard(query) {
+    if (!query) {
+        // Reset to default Global logic
+        renderUsers(globalUsers);
+        renderEvents(globalEvents);
+        // Fallback for challenges since we didn't initially store them globally
+        const tempRes = document.getElementById('challenges-list');
+        if (tempRes.getAttribute('data-cached-challenges')) {
+            try { renderChallenges(JSON.parse(tempRes.getAttribute('data-cached-challenges'))); } catch (e) { }
+        }
+        return;
+    }
+
+    const lowerQ = query.toLowerCase();
+
+    // Filter Users
+    const filteredUsers = globalUsers.filter(u => {
+        const matchName = u.name && u.name.toLowerCase().includes(lowerQ);
+        const matchTalent = u.talents && u.talents.some(t => t.name.toLowerCase().includes(lowerQ));
+        return matchName || matchTalent;
+    });
+    renderUsers(filteredUsers);
+
+    // Filter Events
+    const filteredEvents = globalEvents.filter(e => {
+        const matchName = e.name && e.name.toLowerCase().includes(lowerQ);
+        return matchName;
+    });
+    renderEvents(filteredEvents);
+
+    // Filter Challenges (if cached)
+    const tempRes = document.getElementById('challenges-list');
+    if (tempRes.getAttribute('data-cached-challenges')) {
+        try {
+            const cachedChallenges = JSON.parse(tempRes.getAttribute('data-cached-challenges'));
+            const filteredChallenges = cachedChallenges.filter(c => {
+                const matchName = c.name && c.name.toLowerCase().includes(lowerQ);
+                return matchName;
+            });
+            renderChallenges(filteredChallenges);
+        } catch (e) { }
     }
 }
 
