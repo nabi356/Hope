@@ -213,7 +213,13 @@ app.get('/api/nearby', async (req, res) => {
             // Radius check
             if (dist > rKm) return false;
 
-            // Note: Strict Talent match check was removed here to ensure all nearby users are visible globally.
+            // Calculate Talent Match Score
+            let matchScore = 0;
+            if (currentUserTalents.length > 0 && u.talents) {
+                const uTalents = u.talents.map(t => t.id);
+                matchScore = currentUserTalents.filter(t => uTalents.includes(t)).length;
+            }
+            u._doc.matchScore = matchScore;
 
             return true;
         }).map(u => {
@@ -238,7 +244,10 @@ app.get('/api/nearby', async (req, res) => {
         }).map(c => c._doc);
 
         res.json({
-            users: nearbyUsers.sort((a, b) => a.distance - b.distance),
+            users: nearbyUsers.sort((a, b) => {
+                if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+                return a.distance - b.distance;
+            }),
             events: nearbyEvents.sort((a, b) => a.distance - b.distance),
             challenges: nearbyChallenges.sort((a, b) => a.distance - b.distance)
         });
