@@ -210,7 +210,8 @@ app.get('/api/nearby', async (req, res) => {
             const dist = calculateDistance(parseFloat(lat), parseFloat(lng), u.location.lat, u.location.lng);
             u._doc.distance = dist;
 
-            // Radius check (REMOVED: To allow global matches sorted by distance instead of strict cutoff)
+            // Radius check (RESTORED: User explicitly requested strict radius limits)
+            if (dist > rKm) return false;
 
             // Calculate Talent Match Score
             let matchScore = 0;
@@ -231,7 +232,7 @@ app.get('/api/nearby', async (req, res) => {
             if (!e.location || !e.location.lat) return false;
             const dist = calculateDistance(parseFloat(lat), parseFloat(lng), e.location.lat, e.location.lng);
             e._doc.distance = dist;
-            return true;
+            return dist <= rKm;
             // Note: Seeded events currently lack a talents array. Returning them based on radius for now.
         }).map(e => e._doc);
 
@@ -239,7 +240,7 @@ app.get('/api/nearby', async (req, res) => {
             if (!c.location || !c.location.lat) return true; // Global challenges
             const dist = calculateDistance(parseFloat(lat), parseFloat(lng), c.location.lat, c.location.lng);
             c._doc.distance = dist;
-            return true;
+            return dist <= rKm;
         }).map(c => c._doc);
 
         res.json({
