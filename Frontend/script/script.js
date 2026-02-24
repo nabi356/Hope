@@ -344,13 +344,16 @@ function demoLogin() {
 
 function renderTalents() {
     const container = document.getElementById('talents-container');
-    container.innerHTML = TALENT_CATEGORIES.map(category => `
+    container.innerHTML = TALENT_CATEGORIES.map((category, index) => `
         <div class="category-section">
-            <div class="category-header">
-                <div class="category-icon">${category.icon}</div>
-                <div class="category-name">${category.name}</div>
+            <div class="category-header" style="justify-content: space-between; cursor: pointer;" onclick="toggleCategory('reg-category-grid-${index}', 'reg-btn-toggle-${index}')">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <div class="category-icon">${category.icon}</div>
+                    <div class="category-name">${category.name}</div>
+                </div>
+                <button id="reg-btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('reg-category-grid-${index}', this.id)">View All ▼</button>
             </div>
-            <div class="subcategory-grid">
+            <div id="reg-category-grid-${index}" class="subcategory-grid hidden">
                 ${category.subcategories.map(talent => `
                     <div class="talent-wrapper" style="display:flex; flex-direction:column; gap:0.5rem;">
                         <button class="talent-btn" id="btn-${talent.id}" onclick="toggleTalent('${talent.id}', '${talent.name}', this)">
@@ -361,7 +364,7 @@ function renderTalents() {
                             <div style="display:flex; gap:0.5rem; flex-wrap: wrap; justify-content:center;">
                                 <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="train" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'train')"> 🚀 Train</label>
                                 <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="intent-${talent.id}" value="learn" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'learn')"> 📚 Learn</label>
-                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem; color:#eab308; font-weight:bold;"><input type="radio" name="intent-${talent.id}" value="hire" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'hire')"> 💰 Hire Me</label>
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem; color:#eab308; font-weight:bold;"><input type="radio" name="intent-${talent.id}" value="hire" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'hire')"> 💰 Hire</label>
                             </div>
                             <input type="number" id="rate-input-${talent.id}" class="hidden" placeholder="₹ Rate / hr" style="padding:0.25rem; border-radius:4px; border:1px solid #374151; background:#1f2937; color:white; width:80px; text-align:center; margin-top:0.2rem;" onchange="setTalentIntent('${talent.id}', '${talent.name}', 'hire')">
                         </div>
@@ -901,13 +904,32 @@ async function renderModalTalents() {
                     <button id="btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('category-grid-${index}', this.id)">View All ▼</button>
                 </div>
                 <div id="category-grid-${index}" class="subcategory-grid hidden">
-                    ${category.subcategories.map(talent => `
-                        <button class="talent-btn ${currentTalents.find(t => t.id === talent.id) ? 'selected' : ''}" 
-                                onclick="toggleModalTalent('${talent.id}', '${talent.name}', this)">
-                            <div class="talent-icon">${talent.icon}</div>
-                            <div class="talent-name">${talent.name}</div>
-                        </button>
-                    `).join('')}
+                    ${category.subcategories.map(talent => {
+            const existing = currentTalents.find(t => t.id === talent.id);
+            const isSelected = existing ? 'selected' : '';
+            const showIntent = existing ? '' : 'hidden';
+            const trainChecked = existing && existing.intent === 'train' ? 'checked' : '';
+            const learnChecked = existing && existing.intent === 'learn' ? 'checked' : '';
+            const hireChecked = existing && existing.intent === 'hire' ? 'checked' : '';
+            const showRate = existing && existing.intent === 'hire' ? '' : 'hidden';
+            const hourlyRate = existing && existing.hourlyRate ? existing.hourlyRate : '';
+            return `
+                        <div class="talent-wrapper" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <button class="talent-btn ${isSelected}" id="modal-btn-${talent.id}" onclick="toggleModalTalent('${talent.id}', '${talent.name}', this)">
+                                <div class="talent-icon">${talent.icon}</div>
+                                <div class="talent-name">${talent.name}</div>
+                            </button>
+                            <div class="talent-intents ${showIntent}" id="modal-intent-${talent.id}" style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; font-size: 0.8rem; margin-top: 0.5rem;">
+                                <div style="display:flex; gap:0.5rem; flex-wrap: wrap; justify-content:center;">
+                                    <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="modal-intent-${talent.id}" value="train" onchange="setModalTalentIntent('${talent.id}', '${talent.name}', 'train')" ${trainChecked}> 🚀 Train</label>
+                                    <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem;"><input type="radio" name="modal-intent-${talent.id}" value="learn" onchange="setModalTalentIntent('${talent.id}', '${talent.name}', 'learn')" ${learnChecked}> 📚 Learn</label>
+                                    <label style="cursor:pointer; display:flex; align-items:center; gap:0.2rem; color:#eab308; font-weight:bold;"><input type="radio" name="modal-intent-${talent.id}" value="hire" onchange="setModalTalentIntent('${talent.id}', '${talent.name}', 'hire')" ${hireChecked}> 💰 Hire</label>
+                                </div>
+                                <input type="number" id="modal-rate-input-${talent.id}" class="${showRate}" value="${hourlyRate}" placeholder="₹ Rate / hr" style="padding:0.25rem; border-radius:4px; border:1px solid #374151; background:#1f2937; color:white; width:80px; text-align:center; margin-top:0.2rem;" onchange="setModalTalentIntent('${talent.id}', '${talent.name}', 'hire')">
+                            </div>
+                        </div>
+                        `;
+        }).join('')}
                 </div>
             </div>
         `).join('');
@@ -934,14 +956,44 @@ function toggleCategory(gridId, btnId) {
 
 function toggleModalTalent(id, name, btn) {
     const talent = selectedTalents.find(t => t.id === id);
+    const intentDiv = document.getElementById(`modal-intent-${id}`);
+
     if (talent) {
         selectedTalents = selectedTalents.filter(t => t.id !== id);
         btn.classList.remove('selected');
+        intentDiv.classList.add('hidden');
+
+        const radios = document.getElementsByName(`modal-intent-${id}`);
+        radios.forEach(r => r.checked = false);
+        const rateInput = document.getElementById(`modal-rate-input-${id}`);
+        if (rateInput) { rateInput.classList.add('hidden'); rateInput.value = ''; }
     } else {
-        selectedTalents.push({ id, name });
         btn.classList.add('selected');
+        intentDiv.classList.remove('hidden');
     }
-    document.getElementById('modal-talent-count').textContent = `${selectedTalents.length} skills selected`;
+    document.getElementById('modal-talent-count').textContent = `${selectedTalents.filter(t => t.intent).length} skills fully configured`;
+}
+
+function setModalTalentIntent(id, name, intent) {
+    const existing = selectedTalents.find(t => t.id === id);
+    const rateInput = document.getElementById(`modal-rate-input-${id}`);
+
+    let hourlyRate = 0;
+
+    if (intent === 'hire') {
+        rateInput.classList.remove('hidden');
+        hourlyRate = parseInt(rateInput.value) || 0;
+    } else {
+        rateInput.classList.add('hidden');
+    }
+
+    if (existing) {
+        existing.intent = intent;
+        existing.hourlyRate = hourlyRate;
+    } else {
+        selectedTalents.push({ id, name, intent, hourlyRate });
+    }
+    document.getElementById('modal-talent-count').textContent = `${selectedTalents.filter(t => t.intent).length} skills fully configured`;
 }
 
 async function saveModalTalents() {
@@ -1044,6 +1096,9 @@ window.onload = async () => {
     const currentUserId = localStorage.getItem('currentUserId');
 
     if (token && currentUserId) {
+        // Optimistic UI Load
+        showPage('dashboard-page');
+
         // Load user data from Server
         try {
             const data = await apiCall(`/user/${currentUserId}`);
@@ -1057,7 +1112,6 @@ window.onload = async () => {
                 } else if (!currentUser.location || !currentUser.location.address) {
                     showPage('location-page');
                 } else {
-                    showPage('dashboard-page');
                     loadDashboard();
                 }
             } else {
