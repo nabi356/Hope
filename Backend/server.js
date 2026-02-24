@@ -8,7 +8,8 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // User's MongoDB Atlas URI
 const MONGO_URI = 'mongodb+srv://dancernabi_db_user:Nabi2005@cluster0.blsmvvs.mongodb.net/hope_db?appName=Cluster0';
@@ -103,7 +104,28 @@ const Message = mongoose.model('Message', messageSchema);
 const Match = mongoose.model('Match', matchSchema);
 const Collab = mongoose.model('Collab', collabSchema);
 
+const feedbackSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    userName: String,
+    type: { type: String, enum: ['bug', 'suggestion', 'other'] },
+    description: String,
+    createdAt: { type: Date, default: Date.now }
+});
+const Feedback = mongoose.model('Feedback', feedbackSchema);
+
 // ----------------- ROUTES ----------------- //
+
+// Submit Feedback
+app.post('/api/feedback', async (req, res) => {
+    try {
+        const { userId, userName, type, description } = req.body;
+        const newFeedback = new Feedback({ userId, userName, type, description });
+        await newFeedback.save();
+        res.json({ message: 'Feedback submitted successfully', feedback: newFeedback });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // Register
 app.post('/api/register', async (req, res) => {
