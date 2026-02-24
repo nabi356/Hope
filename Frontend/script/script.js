@@ -891,13 +891,16 @@ async function renderModalTalents() {
         selectedTalents = [...currentTalents];
 
         const container = document.getElementById('modal-talents-container');
-        container.innerHTML = TALENT_CATEGORIES.map(category => `
+        container.innerHTML = TALENT_CATEGORIES.map((category, index) => `
             <div class="category-section">
-                <div class="category-header">
-                    <div class="category-icon">${category.icon}</div>
-                    <div class="category-name">${category.name}</div>
+                <div class="category-header" style="justify-content: space-between; cursor: pointer;" onclick="toggleCategory('category-grid-${index}', 'btn-toggle-${index}')">
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <div class="category-icon">${category.icon}</div>
+                        <div class="category-name">${category.name}</div>
+                    </div>
+                    <button id="btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('category-grid-${index}', this.id)">View All ▼</button>
                 </div>
-                <div class="subcategory-grid">
+                <div id="category-grid-${index}" class="subcategory-grid hidden">
                     ${category.subcategories.map(talent => `
                         <button class="talent-btn ${currentTalents.find(t => t.id === talent.id) ? 'selected' : ''}" 
                                 onclick="toggleModalTalent('${talent.id}', '${talent.name}', this)">
@@ -912,6 +915,20 @@ async function renderModalTalents() {
         document.getElementById('modal-talent-count').textContent = `${selectedTalents.length} skills selected`;
     } catch (e) {
         console.error("Failed to render modal talents", e);
+    }
+}
+
+function toggleCategory(gridId, btnId) {
+    const grid = document.getElementById(gridId);
+    const btn = document.getElementById(btnId);
+    if (!grid || !btn) return;
+
+    if (grid.classList.contains('hidden')) {
+        grid.classList.remove('hidden');
+        btn.textContent = 'Hide ▲';
+    } else {
+        grid.classList.add('hidden');
+        btn.textContent = 'View All ▼';
     }
 }
 
