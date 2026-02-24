@@ -16,6 +16,14 @@ if ('serviceWorker' in navigator) {
 // -------------------------------------------------------------
 // EXISTING CODE STARTS HERE
 // -------------------------------------------------------------
+
+function getAvatarHtml(avatar) {
+    if (avatar && avatar.startsWith('data:image')) {
+        return `<img src="${avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; pointer-events:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;" draggable="false" oncontextmenu="return false;">`;
+    }
+    return avatar || '👤';
+}
+
 const TALENT_CATEGORIES = [
     {
         id: 'music',
@@ -566,7 +574,7 @@ function renderUsers(users) {
     document.getElementById('users-list').innerHTML = displayUsers.map(u => `
         <div class="user-card">
             <div class="user-header">
-                <div class="user-avatar">${u.avatar || '👤'}</div>
+                <div class="user-avatar">${getAvatarHtml(u.avatar)}</div>
                 <div>⭐ ${u.rating ? u.rating.toFixed(1) : '0.0'}</div>
             </div>
             <h3>${u.name}</h3>
@@ -586,7 +594,7 @@ function renderUsers(users) {
             const marker = L.marker([u.location.lat, u.location.lng], {
                 icon: L.divIcon({
                     className: 'custom-div-icon',
-                    html: `<div style='background-color:#8b5cf6; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white;'>${u.avatar || '👤'}</div>`,
+                    html: `<div style='background-color:#8b5cf6; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:2px solid white;'>${getAvatarHtml(u.avatar)}</div>`,
                     iconSize: [30, 30]
                 })
             }).addTo(map).bindPopup(`<b>${u.name}</b><div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-top:0.25rem;">${renderTalentBadges(u.talents)}</div>`);
@@ -1294,7 +1302,7 @@ async function openChatHistory() {
 
         chatHistoryList.innerHTML = data.history.map(chat => `
             <div class="chat-history-item" onclick="openChatFromHistory('${chat.partnerId}', '${chat.name}', '${chat.avatar}')">
-                <div class="chat-history-item-avatar">${chat.avatar || '👤'}</div>
+                <div class="chat-history-item-avatar">${getAvatarHtml(chat.avatar)}</div>
                 <div class="chat-history-item-content">
                     <div class="chat-history-item-name">${chat.name}</div>
                     <div class="chat-history-item-preview">${chat.lastMessage}</div>
@@ -1598,7 +1606,7 @@ async function openMatchesModal() {
             container.innerHTML = matchedUsers.map(m => `
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 12px;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="font-size: 2rem;">${m.partner.avatar || '👤'}</div>
+                        <div style="font-size: 2rem; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">${getAvatarHtml(m.partner.avatar)}</div>
                         <div>
                             <h4 style="margin: 0; font-size: 1.125rem;">${m.partner.name}</h4>
                             <p style="color: #a855f7; font-size: 0.875rem; margin: 0;">${m.partner.talents ? m.partner.talents.map(t => t.name).join(', ') : ''}</p>
@@ -1639,7 +1647,7 @@ async function openCollabsModal() {
             incomingContainer.innerHTML = res.incoming.map(c => `
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.5rem;">${c.user.avatar || '👤'}</span>
+                        <span style="font-size: 1.5rem; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">${getAvatarHtml(c.user.avatar)}</span>
                         <span style="font-weight: 500;">${c.user.name}</span>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
@@ -1657,7 +1665,7 @@ async function openCollabsModal() {
         } else {
             outgoingContainer.innerHTML = res.outgoing.map(c => `
                 <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
-                    <span style="font-size: 1.25rem; opacity: 0.6;">${c.user.avatar || '👤'}</span>
+                    <span style="font-size: 1.25rem; opacity: 0.6; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">${getAvatarHtml(c.user.avatar)}</span>
                     <span style="color: #9ca3af; font-size: 0.875rem;">Waiting on ${c.user.name}...</span>
                 </div>
             `).join('');
@@ -1670,7 +1678,7 @@ async function openCollabsModal() {
             acceptedContainer.innerHTML = res.accepted.map(c => `
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 8px;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.5rem;">${c.user.avatar || '👤'}</span>
+                        <span style="font-size: 1.5rem; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">${getAvatarHtml(c.user.avatar)}</span>
                         <span style="font-weight: 500;">${c.user.name}</span>
                     <div style="display: flex; gap: 0.5rem;">
                         <button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #fef08a; color: #fef08a; background: rgba(254, 240, 138, 0.1);" onclick="rateUser('${c.user._id}', '${c.user.name}')">⭐ Rate</button>

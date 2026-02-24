@@ -629,8 +629,8 @@
     <div id="avatar-zoom-overlay" class="hidden"
         style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
         onclick="this.classList.add('hidden')">
-        <img id="zoomed-avatar-img" src=""
-            style="max-width: 90%; max-height: 90%; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.8); object-fit: contain;">
+        <img id="zoomed-avatar-img" src="" draggable="false" oncontextmenu="return false;"
+            style="max-width: 90%; max-height: 90%; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.8); object-fit: contain; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; pointer-events: none;">
     </div>
 
     <!-- Matches Hub Modal -->
