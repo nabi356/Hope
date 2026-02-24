@@ -940,6 +940,42 @@ async function saveModalTalents() {
     }
 }
 
+function openFeedbackModal() {
+    document.getElementById('feedback-type').value = 'bug';
+    document.getElementById('feedback-text').value = '';
+    document.getElementById('feedback-overlay').classList.remove('hidden');
+}
+
+function closeFeedbackModal(event) {
+    if (event && event.target.id !== 'feedback-overlay' && event.target.className !== 'close-btn') return;
+    document.getElementById('feedback-overlay').classList.add('hidden');
+}
+
+async function submitFeedback() {
+    if (!currentUser) return;
+    const type = document.getElementById('feedback-type').value;
+    const desc = document.getElementById('feedback-text').value.trim();
+
+    if (!desc) {
+        alert("Please enter a description before submitting.");
+        return;
+    }
+
+    try {
+        await apiCall('/feedback', 'POST', {
+            userId: currentUser._id || currentUser.id,
+            userName: currentUser.name,
+            type: type,
+            description: desc
+        });
+        alert("Thank you! Your feedback has been successfully submitted.");
+        closeFeedbackModal();
+    } catch (e) {
+        console.error("Failed to submit feedback", e);
+        alert("Failed to submit feedback. Please try again.");
+    }
+}
+
 function showEditModal() {
     if (!currentUser) return;
     document.getElementById('edit-name').value = currentUser.name || '';
