@@ -817,8 +817,17 @@ function uploadAvatarImage(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Reject screenshots
+    const fileName = file.name.toLowerCase();
+    if (fileName.includes('screenshot') || fileName.includes('screen_shot')) {
+        alert('Screenshots are not allowed. Please upload a real camera photo.');
+        event.target.value = ''; // clear input
+        return;
+    }
+
     if (file.size > 2 * 1024 * 1024) { // 2MB limit
         alert('File is too large. Please select an image under 2MB.');
+        event.target.value = ''; // clear input
         return;
     }
 
