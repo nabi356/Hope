@@ -836,8 +836,8 @@ function uploadAvatarImage(event) {
         return;
     }
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert('File is too large. Please select an image under 2MB.');
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert('File is too large. Please select an image under 10MB.');
         event.target.value = ''; // clear input
         return;
     }
