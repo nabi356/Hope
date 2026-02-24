@@ -817,8 +817,17 @@ function uploadAvatarImage(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Reject screenshots
+    const fileName = file.name.toLowerCase();
+    if (fileName.includes('screenshot') || fileName.includes('screen_shot')) {
+        alert('Screenshots are not allowed. Please upload a real camera photo.');
+        event.target.value = ''; // clear input
+        return;
+    }
+
     if (file.size > 2 * 1024 * 1024) { // 2MB limit
         alert('File is too large. Please select an image under 2MB.');
+        event.target.value = ''; // clear input
         return;
     }
 
@@ -1140,6 +1149,9 @@ document.addEventListener('DOMContentLoaded', function () {
 /* ============= CHAT FUNCTIONALITY ============= */
 
 let currentChatUser = null;
+let chatPollInterval = null;
+let isChatLoading = false;
+let lastMessageCount = 0;
 
 async function openChatWithUser(userId, userName, userAvatar) {
     currentChatUser = {
@@ -1155,7 +1167,11 @@ async function openChatWithUser(userId, userName, userAvatar) {
     document.getElementById('chat-details-empty').classList.add('hidden');
     document.getElementById('chat-details-active').classList.remove('hidden');
 
+    lastMessageCount = 0;
     await loadChatMessages();
+
+    if (chatPollInterval) clearInterval(chatPollInterval);
+    chatPollInterval = setInterval(loadChatMessages, 2500);
 
     // Auto-focus input after slight delay for transition
     setTimeout(() => {
@@ -1166,10 +1182,12 @@ async function openChatWithUser(userId, userName, userAvatar) {
 function backToDashboard() {
     showPage('dashboard-page');
     currentChatUser = null;
+    if (chatPollInterval) clearInterval(chatPollInterval);
 }
 
 async function loadChatMessages() {
-    if (!currentChatUser) return;
+    if (!currentChatUser || isChatLoading) return;
+    isChatLoading = true;
 
     try {
         const currentUserId = currentUser._id || currentUser.id;
@@ -1178,25 +1196,32 @@ async function loadChatMessages() {
         const messagesContainer = document.getElementById('chat-details-messages');
 
         if (!data.messages || data.messages.length === 0) {
-            messagesContainer.innerHTML = `<div class="text-center" style="color: #9ca3af; margin-top: 2rem;">Start the conversation with ${currentChatUser.name}!</div>`;
+            if (lastMessageCount !== 0) {
+                messagesContainer.innerHTML = `<div class="text-center" style="color: #9ca3af; margin-top: 2rem;">Start the conversation with ${currentChatUser.name}!</div>`;
+                lastMessageCount = 0;
+            }
+            isChatLoading = false;
             return;
         }
 
-        messagesContainer.innerHTML = data.messages.map(msg => {
-            const isMe = msg.senderId === currentUserId;
-            return `
-                <div class="chat-message ${isMe ? 'sent' : 'received'}">
-                    ${msg.text}
-                </div>
-            `;
-        }).join('');
+        if (data.messages.length !== lastMessageCount) {
+            messagesContainer.innerHTML = data.messages.map(msg => {
+                const isMe = msg.senderId === currentUserId;
+                return `
+                    <div class="chat-message ${isMe ? 'sent' : 'received'}">
+                        ${msg.text}
+                    </div>
+                `;
+            }).join('');
 
-        // Scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            lastMessageCount = data.messages.length;
+        }
     } catch (e) {
         console.error('Failed to load messages', e);
-        document.getElementById('chat-details-messages').innerHTML = `<div class="text-center" style="color: #ef4444; margin-top: 2rem;">Error loading chat history.</div>`;
     }
+    isChatLoading = false;
 }
 
 async function sendDetailsChatMessage() {
@@ -1215,29 +1240,39 @@ async function sendDetailsChatMessage() {
         messagesContainer.innerHTML = '';
     }
 
-    messagesContainer.innerHTML += `
-        <div class="chat-message sent" style="opacity: 0.7;">
-            ${message}
-        </div>
-    `;
+    const tempId = 'msg-' + Date.now();
+    const newMsgObj = document.createElement('div');
+    newMsgObj.id = tempId;
+    newMsgObj.className = 'chat-message sent';
+    newMsgObj.style.opacity = '0.7';
+    newMsgObj.textContent = message;
+
+    messagesContainer.appendChild(newMsgObj);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
     input.value = '';
+    lastMessageCount++; // Optimistically block full redraw until backend surpasses this count
 
-    // ... existing sendDetailsChatMessage ...
-    try {
-        const currentUserId = currentUser._id || currentUser.id;
-        await apiCall('/messages', 'POST', {
-            senderId: currentUserId,
-            receiverId: currentChatUser.id,
-            text: message
-        });
+    const currentUserId = currentUser._id || currentUser.id;
 
-        // Reload to sync styling and ensure receipt
-        await loadChatMessages();
-    } catch (e) {
-        console.error('Failed to send message', e);
-        alert('Failed to send message. Please try again.');
-    }
+    // Fire and forget payload
+    apiCall('/messages', 'POST', {
+        senderId: currentUserId,
+        receiverId: currentChatUser.id,
+        text: message
+    }).then(() => {
+        const el = document.getElementById(tempId);
+        if (el) el.style.opacity = '1';
+        lastMessageCount--; // Decrement to allow the next clean GET poll to correctly replace the DOM
+    }).catch(e => {
+        console.error('Failed to send', e);
+        const el = document.getElementById(tempId);
+        if (el) {
+            el.style.color = '#ef4444';
+            el.style.opacity = '1';
+            lastMessageCount--;
+        }
+    });
 }
 
 async function openChatHistory() {
