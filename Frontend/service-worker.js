@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hope-pwa-cache-v1';
+const CACHE_NAME = 'hope-pwa-cache-v3';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -8,25 +8,43 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+    // Force the waiting service worker to become the active service worker.
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Opened CACHE_NAME');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
+self.addEventListener('activate', event => {
+    // Clean up old caches
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
 self.addEventListener('fetch', event => {
+    // Stale-While-Revalidate strategy for critical app shells
     event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // Cache hit - return response
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request);
-            }
-            )
+        caches.match(event.request).then(cachedResponse => {
+            const fetchPromise = fetch(event.request).then(networkResponse => {
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, networkResponse.clone());
+                });
+                return networkResponse;
+            }).catch(() => null);
+
+            return cachedResponse || fetchPromise;
+        })
     );
 });
