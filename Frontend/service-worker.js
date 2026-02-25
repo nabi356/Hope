@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hope-pwa-cache-v5';
+const CACHE_NAME = 'hope-pwa-cache-v6';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -36,6 +36,14 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+    // Only intercept GET requests
+    if (event.request.method !== 'GET') return;
+
+    // Bypass API requests to ensure dynamic DB data is always fresh
+    if (event.request.url.includes('/api/')) {
+        return event.respondWith(fetch(event.request));
+    }
+
     // Stale-While-Revalidate strategy for critical app shells
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
