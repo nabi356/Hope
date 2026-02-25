@@ -468,19 +468,26 @@ async function loadDashboard() {
     }
 
     // Live Geolocation Tracking
-    if (navigator.geolocation) {
+    if (navigator.geolocation && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         try {
             const pos = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 0 });
+                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
             });
             const newLat = pos.coords.latitude;
             const newLng = pos.coords.longitude;
 
-            // If the user has physically moved, update DB silently before querying Nearby Array
-            if (currentUser.location && (Math.abs(currentUser.location.lat - newLat) > 0.005 || Math.abs(currentUser.location.lng - newLng) > 0.005)) {
-                currentUser.location = { lat: newLat, lng: newLng, address: currentUser.location.address || 'Live Location' };
+            const oldLat = currentUser.location ? currentUser.location.lat : 0;
+            const oldLng = currentUser.location ? currentUser.location.lng : 0;
+
+            // If the user has physically moved > 11 meters, update DB silently before querying Nearby Array
+            if (Math.abs(oldLat - newLat) > 0.0001 || Math.abs(oldLng - newLng) > 0.0001) {
+                currentUser.location = { lat: newLat, lng: newLng, address: currentUser.location?.address || 'Live Location' };
                 await apiCall(`/user/${currentUser._id || currentUser.id}`, 'PUT', { location: currentUser.location });
                 console.log("Live Location Updated Automatically.");
+            } else if (currentUser.location) {
+                // Ensure the ultra-precise coords are still used for the current session's map
+                currentUser.location.lat = newLat;
+                currentUser.location.lng = newLng;
             }
         } catch (err) {
             console.warn("Silent GPS update failed or timed out", err);
@@ -574,6 +581,12 @@ function renderTalentBadges(talents) {
     }).join('');
 }
 
+function formatDistance(dist) {
+    if (typeof dist !== 'number') return 'Location unknown';
+    if (dist < 0.1) return Math.max(1, (dist * 1000).toFixed(0)) + ' m away';
+    return dist.toFixed(1) + ' km away';
+}
+
 function renderUsers(users) {
     const displayUsers = users.slice(0, 6);
     document.getElementById('users-list').innerHTML = displayUsers.map(u => `
@@ -584,7 +597,7 @@ function renderUsers(users) {
             </div>
             <h3>${u.name}</h3>
             <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-top:0.25rem; justify-content:center;">${renderTalentBadges(u.talents)}</div>
-            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${u.distance ? u.distance.toFixed(1) + ' km away' : 'Near you'}</p>
+            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${formatDistance(u.distance)}</p>
             <button class="btn-primary" style="margin-top: 1rem; width: 100%; border-radius: 8px;" onclick="openChatWithUser('${u._id}', '${u.name}', '${u.avatar || '👤'}')">💬 Connect</button>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                 <button class="btn-primary" style="flex: 1; padding: 0.5rem; border-radius: 8px; background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%); border: none;" onclick="requestMatch('${u._id}')">💖 Match</button>
@@ -648,7 +661,7 @@ function renderEvents(events) {
             <p style="margin-top: 0.25rem;">📅 ${e.date ? new Date(e.date).toLocaleDateString() : 'TBA'} | 📍 ${e.location?.address || 'Local'}</p>
             ${regEndDisplay}
             ${achievementsDisplay}
-            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-top: 0.5rem;">${e.distance ? e.distance.toFixed(1) + ' km away' : ''}</p>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-top: 0.5rem;">${typeof e.distance === 'number' ? formatDistance(e.distance) : ''}</p>
             ${actionButton}
         </div>
         `;
@@ -1852,7 +1865,7 @@ let locationSearchTimeout;
 let selectedSignupLocation = null;
 
 async function detectGPSLocation() {
-    if ("geolocation" in navigator) {
+    if ("geolocation" in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         document.getElementById('city-search-input').placeholder = "Locating via GPS...";
         navigator.geolocation.getCurrentPosition(async (position) => {
             const lat = position.coords.latitude;
