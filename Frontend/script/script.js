@@ -191,6 +191,12 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     const config = { method, headers };
     if (body) config.body = JSON.stringify(body);
 
+    // Force aggressive cache-busting for all GET requests to defeat native WebView/Browser local caches
+    if (method === 'GET') {
+        const separator = endpoint.includes('?') ? '&' : '?';
+        endpoint = `${endpoint}${separator}_t=${Date.now()}`;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
         const data = await response.json();

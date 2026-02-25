@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hope-pwa-cache-v6';
+const CACHE_NAME = 'hope-pwa-cache-v7';
 const urlsToCache = [
     '/',
     '/index.html',
