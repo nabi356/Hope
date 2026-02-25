@@ -241,6 +241,8 @@ app.get('/api/nearby', async (req, res) => {
             if (currentUserTalents.length > 0 && u.talents) {
                 const uTalents = u.talents.map(t => t.id);
                 matchScore = currentUserTalents.filter(t => uTalents.includes(t)).length;
+                // Strict Matching: Reject users mathematically yielding 0 overlapping skills
+                if (matchScore === 0) return false;
             }
             u._doc.matchScore = matchScore;
 
