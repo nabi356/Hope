@@ -295,10 +295,6 @@ async function handleLogin() {
         // Determine next page setup
         if (!currentUser.talents || currentUser.talents.length === 0) {
             showPage('welcome-page');
-        } else if (!currentUser.bio) {
-            showPage('bio-page');
-        } else if (!currentUser.location || !currentUser.location.address) {
-            showPage('location-page');
         } else {
             showPage('dashboard-page');
             loadDashboard();
@@ -1110,10 +1106,6 @@ function initAuth() {
                 currentUser = user;
                 if (!currentUser.talents || currentUser.talents.length === 0) {
                     showPage('welcome-page');
-                } else if (!currentUser.bio) {
-                    showPage('bio-page');
-                } else if (!currentUser.location || !currentUser.location.address) {
-                    showPage('location-page');
                 } else {
                     loadDashboard();
                 }
@@ -1262,11 +1254,7 @@ async function submitCreateEvent() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    if (document.getElementById('welcome-page')) {
-        showPage('welcome-page');
-    }
-});
+
 /* ============= CHAT FUNCTIONALITY ============= */
 
 let currentChatUser = null;
