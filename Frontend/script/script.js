@@ -1088,8 +1088,8 @@ async function saveProfileChanges() {
     }
 }
 
-// Check auth on load
-window.onload = async () => {
+// Check auth extremely fast
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize standard storage or preferences here if needed.
 
     const token = localStorage.getItem('token');
@@ -1124,7 +1124,7 @@ window.onload = async () => {
     } else {
         showPage('login-page');
     }
-};
+});
 
 /* Profile Modal Functions */
 async function showProfileModal() {
