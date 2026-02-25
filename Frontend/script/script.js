@@ -1088,10 +1088,8 @@ async function saveProfileChanges() {
     }
 }
 
-// Check auth extremely fast
-document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize standard storage or preferences here if needed.
-
+function initAuth() {
+    // Check auth instantly without waiting for DOMContentLoaded race-conditions
     const token = localStorage.getItem('token');
     const currentUserId = localStorage.getItem('currentUserId');
 
@@ -1100,8 +1098,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showPage('dashboard-page');
 
         // Load user data from Server
-        try {
-            const data = await apiCall(`/user/${currentUserId}`);
+        apiCall(`/user/${currentUserId}`).then(data => {
             const user = data.user;
             if (user) {
                 currentUser = user;
@@ -1117,14 +1114,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 logout();
             }
-        } catch (e) {
+        }).catch(e => {
             console.error("Session invalid or server down", e);
             logout();
-        }
+        });
     } else {
         showPage('login-page');
     }
-});
+}
+
+// Fire the authorization loop immediately since the script is loaded at the bottom of the <body>
+initAuth();
 
 /* Profile Modal Functions */
 async function showProfileModal() {
