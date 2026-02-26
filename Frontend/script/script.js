@@ -1549,7 +1549,7 @@ function openShowAllUsers() {
     document.getElementById('show-all-grid').innerHTML = globalUsers.map(u => `
         <div class="user-card">
             <div class="user-header">
-                <div class="user-avatar">${u.avatar || '👤'}</div>
+                <div class="user-avatar">${getAvatarHtml(u.avatar)}</div>
                 <div>⭐ ${u.rating ? u.rating.toFixed(1) : '0.0'}</div>
             </div>
             <h3>${u.name}</h3>
