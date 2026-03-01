@@ -4,7 +4,7 @@
   "description": "",
   "main": "service-worker.js",
   "scripts": {
-    "build": "javascript-obfuscator ./script/script.js --output dist/bundle.min.js --compact true --target browser --rename-globals false"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
