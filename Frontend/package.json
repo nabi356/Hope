@@ -4,7 +4,7 @@
   "description": "",
   "main": "service-worker.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "javascript-obfuscator ./script/script.js --output dist/bundle.min.js --compact true --target browser --rename-globals false"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.1.0",
+    "javascript-obfuscator": "^5.3.0",
     "terser-webpack-plugin": "^5.3.16",
     "webpack": "^5.105.3",
     "webpack-cli": "^6.0.1"
