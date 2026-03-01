@@ -159,7 +159,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/user/:id', async (req, res) => {
     try {
         if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Invalid ID format' });
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).select('-password');
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ user });
     } catch (err) {
@@ -224,7 +224,7 @@ app.get('/api/nearby', async (req, res) => {
 
         const queryFilter = currentUserId && mongoose.isValidObjectId(currentUserId)
             ? { _id: { $ne: currentUserId } } : {};
-        const allUsers = await User.find(queryFilter);
+        const allUsers = await User.find(queryFilter).select('-password');
         const allEvents = await Event.find({});
         const allChallenges = await Challenge.find({});
 
@@ -250,6 +250,12 @@ app.get('/api/nearby', async (req, res) => {
         }).map(u => {
             const safe = { ...u._doc };
             delete safe.password;
+            // SECURITY: Strip exact geometric coordinates from public APIs to protect user privacy.
+            if (safe.location) {
+                safe.location = Object.assign({}, safe.location); // clone object to avoid mutating original doc
+                delete safe.location.lat;
+                delete safe.location.lng;
+            }
             return safe;
         });
 
@@ -259,14 +265,30 @@ app.get('/api/nearby', async (req, res) => {
             e._doc.distance = dist;
             return dist <= rKm;
             // Note: Seeded events currently lack a talents array. Returning them based on radius for now.
-        }).map(e => e._doc);
+        }).map(e => {
+            const safe = { ...e._doc };
+            if (safe.location) {
+                safe.location = Object.assign({}, safe.location);
+                delete safe.location.lat;
+                delete safe.location.lng;
+            }
+            return safe;
+        });
 
         const nearbyChallenges = allChallenges.filter(c => {
             if (!c.location || !c.location.lat) return true; // Global challenges
             const dist = calculateDistance(parseFloat(lat), parseFloat(lng), c.location.lat, c.location.lng);
             c._doc.distance = dist;
             return dist <= rKm;
-        }).map(c => c._doc);
+        }).map(c => {
+            const safe = { ...c._doc };
+            if (safe.location) {
+                safe.location = Object.assign({}, safe.location);
+                delete safe.location.lat;
+                delete safe.location.lng;
+            }
+            return safe;
+        });
 
         res.json({
             users: nearbyUsers.sort((a, b) => {
