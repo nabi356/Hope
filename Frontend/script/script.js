@@ -467,31 +467,36 @@ async function loadDashboard() {
         console.error(e);
     }
 
-    // Live Geolocation Tracking
+    // Live Geolocation Tracking (Non-blocking background poll)
     if (navigator.geolocation && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-        try {
-            const pos = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
-            });
-            const newLat = pos.coords.latitude;
-            const newLng = pos.coords.longitude;
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                const newLat = pos.coords.latitude;
+                const newLng = pos.coords.longitude;
 
-            const oldLat = currentUser.location ? currentUser.location.lat : 0;
-            const oldLng = currentUser.location ? currentUser.location.lng : 0;
+                const oldLat = currentUser.location ? currentUser.location.lat : 0;
+                const oldLng = currentUser.location ? currentUser.location.lng : 0;
 
-            // If the user has physically moved > 11 meters, update DB silently before querying Nearby Array
-            if (Math.abs(oldLat - newLat) > 0.0001 || Math.abs(oldLng - newLng) > 0.0001) {
-                currentUser.location = { lat: newLat, lng: newLng, address: currentUser.location?.address || 'Live Location' };
-                await apiCall(`/user/${currentUser._id || currentUser.id}`, 'PUT', { location: currentUser.location });
-                console.log("Live Location Updated Automatically.");
-            } else if (currentUser.location) {
-                // Ensure the ultra-precise coords are still used for the current session's map
-                currentUser.location.lat = newLat;
-                currentUser.location.lng = newLng;
+                // If the user has physically moved > 11 meters, update DB silently and refresh map
+                if (Math.abs(oldLat - newLat) > 0.0001 || Math.abs(oldLng - newLng) > 0.0001) {
+                    currentUser.location = { lat: newLat, lng: newLng, address: currentUser.location?.address || 'Live Location' };
+                    await apiCall(`/user/${currentUser._id || currentUser.id}`, 'PUT', { location: currentUser.location });
+                    console.log("Live Location Updated Automatically.");
+                    // Real-time map/grid update based on new coordinates
+                    if (map) {
+                        map.setView([newLat, newLng], 12);
+                    }
+                    fetchNearbyData(newLat, newLng, currentRadiusKm);
+                } else if (currentUser.location) {
+                    currentUser.location.lat = newLat;
+                    currentUser.location.lng = newLng;
+                }
+            } catch (err) {
+                console.error("Background GPS sync error:", err);
             }
-        } catch (err) {
-            console.warn("Silent GPS update failed or timed out", err);
-        }
+        }, (err) => {
+            console.warn("Silent GPS update failed or timed out:", err);
+        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
     }
 
     updateProfileDisplay();
