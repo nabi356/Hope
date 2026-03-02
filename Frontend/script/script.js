@@ -530,6 +530,12 @@ function initMap(centerLoc) {
     } else {
         map.setView([centerLoc.lat, centerLoc.lng], 12);
     }
+
+    // Fix for Leaflet 'black tile' visual glitch. Forces recalculation of container dimensions
+    // after the CSS page transition has completed.
+    setTimeout(() => {
+        if (map) map.invalidateSize();
+    }, 300);
 }
 
 async function updateRadius(val) {
