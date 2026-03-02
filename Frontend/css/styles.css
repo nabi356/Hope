@@ -770,7 +770,9 @@ textarea {
     margin-bottom: 2rem;
 }
 
-.user-grid {
+.user-grid,
+.event-grid,
+.challenge-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
