@@ -250,11 +250,16 @@ app.get('/api/nearby', async (req, res) => {
         }).map(u => {
             const safe = { ...u._doc };
             delete safe.password;
-            // SECURITY: Strip exact geometric coordinates from public APIs to protect user privacy.
-            if (safe.location) {
+            // SECURITY: Blur geometric coordinates from public APIs to protect user privacy.
+            if (safe.location && safe.location.lat && safe.location.lng) {
                 safe.location = Object.assign({}, safe.location); // clone object to avoid mutating original doc
-                delete safe.location.lat;
-                delete safe.location.lng;
+
+                // Add a random offset between -0.005 and 0.005 degrees (~500 meter radius blur)
+                const latOffset = (Math.random() - 0.5) * 0.01;
+                const lngOffset = (Math.random() - 0.5) * 0.01;
+
+                safe.location.lat = safe.location.lat + latOffset;
+                safe.location.lng = safe.location.lng + lngOffset;
             }
             return safe;
         });
@@ -267,10 +272,13 @@ app.get('/api/nearby', async (req, res) => {
             // Note: Seeded events currently lack a talents array. Returning them based on radius for now.
         }).map(e => {
             const safe = { ...e._doc };
-            if (safe.location) {
+            // SECURITY: Blur geometric coordinates from public APIs to protect user privacy.
+            if (safe.location && safe.location.lat && safe.location.lng) {
                 safe.location = Object.assign({}, safe.location);
-                delete safe.location.lat;
-                delete safe.location.lng;
+                const latOffset = (Math.random() - 0.5) * 0.01;
+                const lngOffset = (Math.random() - 0.5) * 0.01;
+                safe.location.lat = safe.location.lat + latOffset;
+                safe.location.lng = safe.location.lng + lngOffset;
             }
             return safe;
         });
@@ -282,10 +290,13 @@ app.get('/api/nearby', async (req, res) => {
             return dist <= rKm;
         }).map(c => {
             const safe = { ...c._doc };
-            if (safe.location) {
+            // SECURITY: Blur geometric coordinates from public APIs to protect user privacy.
+            if (safe.location && safe.location.lat && safe.location.lng) {
                 safe.location = Object.assign({}, safe.location);
-                delete safe.location.lat;
-                delete safe.location.lng;
+                const latOffset = (Math.random() - 0.5) * 0.01;
+                const lngOffset = (Math.random() - 0.5) * 0.01;
+                safe.location.lat = safe.location.lat + latOffset;
+                safe.location.lng = safe.location.lng + lngOffset;
             }
             return safe;
         });
