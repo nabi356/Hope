@@ -162,14 +162,46 @@ const TALENT_CATEGORIES = [
         name: 'Languages',
         icon: '🌍',
         subcategories: [
+            { id: 'english', name: 'English', icon: '🇬🇧' },
+            { id: 'mandarin', name: 'Mandarin', icon: '🇨🇳' },
+            { id: 'hindi', name: 'Hindi', icon: '🇮🇳' },
             { id: 'spanish', name: 'Spanish', icon: '🇪🇸' },
             { id: 'french', name: 'French', icon: '🇫🇷' },
-            { id: 'german', name: 'German', icon: '🇩🇪' },
-            { id: 'mandarin', name: 'Mandarin', icon: '🇨🇳' },
-            { id: 'japanese', name: 'Japanese', icon: '🇯🇵' },
             { id: 'arabic', name: 'Arabic', icon: '🇸🇦' },
-            { id: 'english', name: 'English', icon: '🇬🇧' },
-            { id: 'hindi', name: 'Hindi', icon: '🇮🇳' }
+            { id: 'bengali', name: 'Bengali', icon: '🇧🇩' },
+            { id: 'russian', name: 'Russian', icon: '🇷🇺' },
+            { id: 'portuguese', name: 'Portuguese', icon: '🇵🇹' },
+            { id: 'urdu', name: 'Urdu', icon: '🇵🇰' },
+            { id: 'indonesian', name: 'Indonesian', icon: '🇮🇩' },
+            { id: 'german', name: 'German', icon: '🇩🇪' },
+            { id: 'japanese', name: 'Japanese', icon: '🇯🇵' },
+            { id: 'marathi', name: 'Marathi', icon: '🇮🇳' },
+            { id: 'telugu', name: 'Telugu', icon: '🇮🇳' },
+            { id: 'turkish', name: 'Turkish', icon: '🇹🇷' },
+            { id: 'tamil', name: 'Tamil', icon: '🇮🇳' },
+            { id: 'vietnamese', name: 'Vietnamese', icon: '🇻🇳' },
+            { id: 'tagalog', name: 'Tagalog', icon: '🇵🇭' },
+            { id: 'korean', name: 'Korean', icon: '🇰🇷' },
+            { id: 'persian', name: 'Persian', icon: '🇮🇷' },
+            { id: 'swahili', name: 'Swahili', icon: '🇰🇪' },
+            { id: 'italian', name: 'Italian', icon: '🇮🇹' },
+            { id: 'punjabi', name: 'Punjabi', icon: '🇮🇳' },
+            { id: 'gujarati', name: 'Gujarati', icon: '🇮🇳' },
+            { id: 'thai', name: 'Thai', icon: '🇹🇭' },
+            { id: 'amharic', name: 'Amharic', icon: '🇪🇹' },
+            { id: 'kannada', name: 'Kannada', icon: '🇮🇳' },
+            { id: 'malayalam', name: 'Malayalam', icon: '🇮🇳' },
+            { id: 'burmese', name: 'Burmese', icon: '🇲🇲' },
+            { id: 'yoruba', name: 'Yoruba', icon: '🇳🇬' },
+            { id: 'uzbek', name: 'Uzbek', icon: '🇺🇿' },
+            { id: 'hausa', name: 'Hausa', icon: '🇳🇬' },
+            { id: 'dutch', name: 'Dutch', icon: '🇳🇱' },
+            { id: 'greek', name: 'Greek', icon: '🇬🇷' },
+            { id: 'polish', name: 'Polish', icon: '🇵🇱' },
+            { id: 'ukrainian', name: 'Ukrainian', icon: '🇺🇦' },
+            { id: 'romanian', name: 'Romanian', icon: '🇷🇴' },
+            { id: 'hungarian', name: 'Hungarian', icon: '🇭🇺' },
+            { id: 'czech', name: 'Czech', icon: '🇨🇿' }
         ]
     }
 ];
@@ -355,7 +387,7 @@ function renderTalents() {
                 </div>
                 <button id="reg-btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('reg-category-grid-${index}', this.id)">View All ▼</button>
             </div>
-            <div id="reg-category-grid-${index}" class="subcategory-grid hidden">
+            <div id="reg-category-grid-${index}" class="subcategory-grid hidden" ${category.id === 'language' ? 'style="max-height: 280px; overflow-y: auto; padding-right: 5px;"' : ''}>
                 ${category.subcategories.map(talent => `
                     <div class="talent-wrapper" style="display:flex; flex-direction:column; gap:0.5rem;">
                         <button class="talent-btn" id="btn-${talent.id}" onclick="toggleTalent('${talent.id}', '${talent.name}', this)">
@@ -929,7 +961,7 @@ async function renderModalTalents() {
                     </div>
                     <button id="btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('category-grid-${index}', this.id)">View All ▼</button>
                 </div>
-                <div id="category-grid-${index}" class="subcategory-grid hidden">
+                <div id="category-grid-${index}" class="subcategory-grid hidden" ${category.id === 'language' ? 'style="max-height: 280px; overflow-y: auto; padding-right: 5px;"' : ''}>
                     ${category.subcategories.map(talent => {
             const existing = currentTalents.find(t => t.id === talent.id);
             const isSelected = existing ? 'selected' : '';
