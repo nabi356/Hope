@@ -101,13 +101,33 @@ const TALENT_CATEGORIES = [
             { id: 'football', name: 'Football', icon: '⚽' },
             { id: 'basketball', name: 'Basketball', icon: '🏀' },
             { id: 'tennis', name: 'Tennis', icon: '🎾' },
+            { id: 'cricket', name: 'Cricket', icon: '🏏' },
+            { id: 'baseball', name: 'Baseball', icon: '⚾' },
+            { id: 'volleyball', name: 'Volleyball', icon: '🏐' },
+            { id: 'golf', name: 'Golf', icon: '⛳' },
+            { id: 'rugby', name: 'Rugby', icon: '🏉' },
+            { id: 'badminton', name: 'Badminton', icon: '🏸' },
+            { id: 'table-tennis', name: 'Table Tennis', icon: '🏓' },
+            { id: 'boxing', name: 'Boxing', icon: '🥊' },
+            { id: 'ice-hockey', name: 'Ice Hockey', icon: '🏒' },
+            { id: 'field-hockey', name: 'Field Hockey', icon: '🏑' },
             { id: 'swimming', name: 'Swimming', icon: '🏊' },
             { id: 'yoga', name: 'Yoga', icon: '🧘' },
             { id: 'gym', name: 'Fitness', icon: '💪' },
             { id: 'martial-arts', name: 'Martial Arts', icon: '🥋' },
             { id: 'cycling', name: 'Cycling', icon: '🚴' },
             { id: 'rock-climbing', name: 'Rock Climbing', icon: '🧗' },
-            { id: 'skateboarding', name: 'Skateboarding', icon: '🛹' }
+            { id: 'skateboarding', name: 'Skateboarding', icon: '🛹' },
+            { id: 'surfing', name: 'Surfing', icon: '🏄' },
+            { id: 'snowboarding', name: 'Snowboarding', icon: '🏂' },
+            { id: 'gymnastics', name: 'Gymnastics', icon: '🤸' },
+            { id: 'chess', name: 'Chess', icon: '♟️' },
+            { id: 'esports', name: 'Esports', icon: '🎮' },
+            { id: 'archery', name: 'Archery', icon: '🏹' },
+            { id: 'billiards', name: 'Billiards/Snooker', icon: '🎱' },
+            { id: 'bowling', name: 'Bowling', icon: '🎳' },
+            { id: 'wrestling', name: 'Wrestling', icon: '🤼' },
+            { id: 'running', name: 'Running', icon: '🏃' }
         ]
     },
     {
@@ -387,7 +407,7 @@ function renderTalents() {
                 </div>
                 <button id="reg-btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('reg-category-grid-${index}', this.id)">View All ▼</button>
             </div>
-            <div id="reg-category-grid-${index}" class="subcategory-grid hidden" ${category.id === 'language' ? 'style="max-height: 280px; overflow-y: auto; padding-right: 5px;"' : ''}>
+            <div id="reg-category-grid-${index}" class="subcategory-grid hidden" ${category.id === 'language' || category.id === 'sports' ? 'style="max-height: 280px; overflow-y: auto; padding-right: 5px;"' : ''}>
                 ${category.subcategories.map(talent => `
                     <div class="talent-wrapper" style="display:flex; flex-direction:column; gap:0.5rem;">
                         <button class="talent-btn" id="btn-${talent.id}" onclick="toggleTalent('${talent.id}', '${talent.name}', this)">
@@ -961,7 +981,7 @@ async function renderModalTalents() {
                     </div>
                     <button id="btn-toggle-${index}" class="btn-secondary" style="font-size: 0.75rem; margin-top: 0; padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); toggleCategory('category-grid-${index}', this.id)">View All ▼</button>
                 </div>
-                <div id="category-grid-${index}" class="subcategory-grid hidden" ${category.id === 'language' ? 'style="max-height: 280px; overflow-y: auto; padding-right: 5px;"' : ''}>
+                <div id="category-grid-${index}" class="subcategory-grid hidden" ${category.id === 'language' || category.id === 'sports' ? 'style="max-height: 280px; overflow-y: auto; padding-right: 5px;"' : ''}>
                     ${category.subcategories.map(talent => {
             const existing = currentTalents.find(t => t.id === talent.id);
             const isSelected = existing ? 'selected' : '';
